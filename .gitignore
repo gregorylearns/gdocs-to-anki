@@ -3,3 +3,5 @@ __pycache__/
 anki_converted/
 archive/
 test/
+releases/
+output/

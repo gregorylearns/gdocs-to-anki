@@ -18,14 +18,28 @@ import random
 import genanki
 from time import sleep
 
-def extract_zip_to_tmp(zip_file_path):
-    # Create a temporary directory in the same folder as the zip file
-    zip_dir = os.path.dirname(zip_file_path)
-    tmp_dir = tempfile.mkdtemp(dir=zip_dir)  # Create a temporary directory without automatic cleanup
+# def extract_zip_to_tmp(zip_file_path):
+#     # Create a temporary directory in the same folder as the zip file
+#     zip_dir = os.path.dirname(zip_file_path)
+#     tmp_dir = tempfile.mkdtemp(dir=zip_dir)  # Create a temporary directory without automatic cleanup
+#     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+#         zip_ref.extractall(tmp_dir)
+#     # Return the path to the temporary directory
+#     return tmp_dir
+
+
+def extract_zip_to_output(zip_file_path, deck_name):
+    # Create the output folder if it doesn't exist
+    global output_folder
+    output_folder = os.path.join("output", f"{deck_name}_output")
+    os.makedirs(output_folder, exist_ok=True)
+
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(tmp_dir)
-    # Return the path to the temporary directory
-    return tmp_dir
+        zip_ref.extractall(output_folder)
+
+    # Return the path to the output folder
+    return output_folder
+
 
 
 def cleanup_tmp_directory(tmp_dir):
@@ -37,7 +51,11 @@ def html_to_md_stdout(htmlfile):
     # uses the html2md.exe executable to convert the html to md
     # print(htmlfile)
     # current_dir = os.path.dirname(os.path.realpath(__file__))
-    command = ["html2md.exe", "-T", "-i", htmlfile]
+
+    # Assuming html2md.exe is in the bin/ folder
+    html2md_path = os.path.join("bin", "html2md_win64.exe")
+    
+    command = [html2md_path, "-T", "-i", htmlfile]
     # print(command)
     md_unparsed = subprocess.check_output(command)# , cwd=current_dir)
     
@@ -99,16 +117,19 @@ def export(parsed_lines):
 
 
 def generate_apkg(parsed_md_split , deck_name):
-    # Get the current date in the format "yyyymmdd"
-    current_date = datetime.datetime.now().strftime("%Y%m%d")
+    # Get the current date in the format "yyyymmddhhmmss"
+    current_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    # print("hi")
+
 
     # Generate 5 random digits
-    random_digits = ''.join(str(random.randint(0, 9)) for _ in range(5))
+    # random_digits = ''.join(str(random.randint(0, 9)) for _ in range(5))
 
     # Combine the date and random digits
-    result = current_date + random_digits
+    # result = current_date + random_digits
 
-    deck_id = int(result)
+    deck_id = int(current_date)
 
     deck = genanki.Deck(deck_id, deck_name)
     #TODO: ADD CODE FOR GENANKI TO INCLUDE THE MEDIA FILES
@@ -119,8 +140,8 @@ def generate_apkg(parsed_md_split , deck_name):
         deck.add_note(note)
 
     # Save the deck to an Anki package (*.apkg) file
-    genanki.Package(deck).write_to_file(f'anki_converted/{deck_name}.apkg')
-    print(f"File saved to anki_converted/{deck_name}-without_media.apkg")
+    genanki.Package(deck).write_to_file(f'{output_folder}/{deck_name}.apkg')
+    print(f"File saved to {output_folder}/{deck_name}-without_media.apkg")
     print("Please Move the images to anki media folder.")
 
 def open_explorer_to_folders(tmp_dir):
@@ -134,9 +155,11 @@ def open_explorer_to_folders(tmp_dir):
     folder2 = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
 
     # Open Windows Explorer to the first folder
-    subprocess.Popen(f'explorer "{script_dir}')
+    # subprocess.Popen(f'explorer "{script_dir}')
+    subprocess.Popen(f'explorer "{output_folder}')
 
-    # Open Windows Explorer to the second folder
+
+    # Open Windows Explorer to the anki appdata folder
     subprocess.Popen(f'explorer "{folder2}"')
 
 
@@ -161,7 +184,7 @@ def process_single_file(zip_file, deck_name):
     # Your processing logic here
     print(f"Processing file: {zip_file}")
 
-    tmp_dir = extract_zip_to_tmp(zip_file)
+    tmp_dir = extract_zip_to_output(zip_file, deck_name)
     print(f'Files extracted to temporary directory: {tmp_dir}')
 
     # DECK_TITLE = zip_file.split(".zip")[0][:15]
@@ -252,7 +275,7 @@ def main(zip_file, deck_name):
     
 
     # Define the output folder
-    output_folder = "anki_converted"
+    output_folder = "output"
 
     # Create the output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)

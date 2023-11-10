@@ -4,7 +4,7 @@ import subprocess
 import html2md2csv
 
 # Define the output folder
-output_folder = "anki_converted"
+output_folder = "output"
 
 # Create the output folder if it doesn't exist
 os.makedirs(output_folder, exist_ok=True)
