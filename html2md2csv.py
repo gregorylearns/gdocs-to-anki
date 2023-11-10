@@ -8,7 +8,29 @@
 import os
 import subprocess
 import re
-from argparse import ArgumentParser
+import sys
+import argparse
+import zipfile
+import shutil
+import tempfile
+import datetime
+import random
+import genanki
+from time import sleep
+
+def extract_zip_to_tmp(zip_file_path):
+    # Create a temporary directory in the same folder as the zip file
+    zip_dir = os.path.dirname(zip_file_path)
+    tmp_dir = tempfile.mkdtemp(dir=zip_dir)  # Create a temporary directory without automatic cleanup
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(tmp_dir)
+    # Return the path to the temporary directory
+    return tmp_dir
+
+
+def cleanup_tmp_directory(tmp_dir):
+    # Clean up the temporary directory
+    shutil.rmtree(tmp_dir)
 
 
 def html_to_md_stdout(htmlfile):
@@ -49,10 +71,10 @@ def parse_md(unparsed_md):
 
 def rename_images(directory):
     
-    folder = f"{directory}images"
+    folder = f"{directory}\\images"
 
-    if os.path.isdir(folder) == False:
-        print(f"No image in {DECK_TITLE}. Skipping..")
+    if os.path.exists(folder) == False:
+        print(f"No image in {folder}. Skipping..")
         return
 
     for filename in os.listdir(folder):
@@ -66,67 +88,192 @@ def rename_images(directory):
         os.rename(src, dst)
 
 
+
 def export(parsed_lines):
     # Export to
-    filename = f"{DECK_TITLE}-converted.txt"
+    filename = f"{DECK_TITLE}-without_media.txt"
     with open(filename, 'w', encoding="utf-8") as output_handle:
         output_handle.write(parsed_lines)    
     print(f"File saved to:{filename} successfully! Please Move the images to anki media folder, and import field. Dont forget to enable HTML in import options")
 
-def batch_mode():
-    # parser = ArgumentParser()
-    # parser.add_argument("-i", "--input-file", action="store")
-    # parser.add_argument("-d", "--directory", action="store")
-    # args = parser.parse_args()
-
-    #batch mode
-    select_folder = False
-    while select_folder == False:
-        daddy_directory = input("Please input the directory: ")
-        if os.path.isdir(daddy_directory) == True:
-            select_folder = True
-
-    print("A")
-    print("Run the code in the Following directories?")
-    baby_directories = os.listdir(daddy_directory)
-    for directory in baby_directories:
-        print(directory)
-
-    prompt1 = input("[Y]es/[N]o: ")
-    if prompt1.lower() == "n":
-        return
-
-    for baby in baby_directories:
-        working_dir = f"{daddy_directory}\\{baby}\\"
-        html = [file for file in os.listdir(working_dir) if ".html" in file][0]
-   
-
-        global DECK_TITLE
-        DECK_TITLE = html.split(".html")[0]
-
-        # title = input_file # <--- maybe add something
-        unparsed_md = html_to_md_stdout(f"{working_dir}{html}") 
-
-        # Parse the output
-        parsed_md = parse_md(unparsed_md)
-        # print(parsed_md)
-
-        # # rename images
-        rename_images(working_dir)
-
-        # # Export
-        export(parsed_md)
 
 
-    return
+def generate_apkg(parsed_md_split , deck_name):
+    # Get the current date in the format "yyyymmdd"
+    current_date = datetime.datetime.now().strftime("%Y%m%d")
+
+    # Generate 5 random digits
+    random_digits = ''.join(str(random.randint(0, 9)) for _ in range(5))
+
+    # Combine the date and random digits
+    result = current_date + random_digits
+
+    deck_id = int(result)
+
+    deck = genanki.Deck(deck_id, deck_name)
+    #TODO: ADD CODE FOR GENANKI TO INCLUDE THE MEDIA FILES
+    for card in parsed_md_split:
+        if len(card) == 1:
+            continue
+        note = genanki.Note(model=genanki.BASIC_MODEL, fields=[card[0], card[1]])
+        deck.add_note(note)
+
+    # Save the deck to an Anki package (*.apkg) file
+    genanki.Package(deck).write_to_file(f'anki_converted/{deck_name}.apkg')
+    print(f"File saved to anki_converted/{deck_name}-without_media.apkg")
+    print("Please Move the images to anki media folder.")
+
+def open_explorer_to_folders(tmp_dir):
+    # Get the script's directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Folder in the script's directory
+    # folder1 = os.path.join(images_directory)
+ 
+    # Folder in %appdata%/Anki2
+    folder2 = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
+
+    # Open Windows Explorer to the first folder
+    subprocess.Popen(f'explorer "{script_dir}')
+
+    # Open Windows Explorer to the second folder
+    subprocess.Popen(f'explorer "{folder2}"')
+
+
+def find_html_files_in_folder(folder_path):
+    html_files = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.html'):
+                html_files.append(os.path.join(root, file))
+    return html_files
+
+def split_text(text, line_delimiter='\n', item_delimiter='|'):
+    lines = text.split(line_delimiter)
+    result = []
+    for line in lines:
+        items = line.split(item_delimiter)
+        result.append([item.strip() for item in items])
+    return result
+
+
+def process_single_file(zip_file, deck_name):
+    # Your processing logic here
+    print(f"Processing file: {zip_file}")
+
+    tmp_dir = extract_zip_to_tmp(zip_file)
+    print(f'Files extracted to temporary directory: {tmp_dir}')
+
+    # DECK_TITLE = zip_file.split(".zip")[0][:15]
+
+    base=os.path.basename(zip_file)
+
+    global DECK_TITLE
+    DECK_TITLE = deck_name + "-" + os.path.splitext(base)[0]
+
+    htmlfile = find_html_files_in_folder(f"{tmp_dir}")
+
+    # title = input_file # <--- maybe add something
+    print(f"{htmlfile[0]}")
+
+
+    unparsed_md = html_to_md_stdout(f"{htmlfile[0]}") 
+
+    # Parse the output
+    parsed_md = parse_md(unparsed_md)
+    # print(parsed_md)
+
+    text_for_anki_front_and_back = split_text(parsed_md)
+    generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
+
+    # # rename images
+    rename_images(tmp_dir)
+    print(f"{tmp_dir}")
+    open_explorer_to_folders(tmp_dir)
+
+    # # Export
+    # export(parsed_md)
+
+    # cleanup_tmp_directory(tmp_dir)
+
+
+# def process_batch_directory(directory_path):
+#     # Your batch processing logic here
+#     print(f"Processing directory: {directory_path}")
+#     # parser = ArgumentParser()
+#     # parser.add_argument("-i", "--input-file", action="store")
+#     # parser.add_argument("-d", "--directory", action="store")
+#     # args = parser.parse_args()
+
+#     # #batch mode
+#     # select_folder = False
+#     # while select_folder == False:
+#     #     daddy_directory = input("Please input the directory: ")
+#     #     if os.path.isdir(daddy_directory) == True:
+#     #         select_folder = True
+
+#     daddy_directory = directory_path
+
+#     print("A")
+#     print("Run the code in the Following directories?")
+#     baby_directories = os.listdir(daddy_directory)
+#     for directory in baby_directories:
+#         print(directory)
+
+#     prompt1 = input("[Y]es/[N]o: ")
+#     if prompt1.lower() == "n":
+#         return
+
+#     for baby in baby_directories:
+#         working_dir = f"{daddy_directory}\\{baby}\\"
+#         html = [file for file in os.listdir(working_dir) if ".html" in file][0]
+    
+
+#         global DECK_TITLE
+#         DECK_TITLE = html.split(".html")[0]
+
+#         # title = input_file # <--- maybe add something
+#         unparsed_md = html_to_md_stdout(f"{working_dir}{html}") 
+
+#         # Parse the output
+#         parsed_md = parse_md(unparsed_md)
+#         # print(parsed_md)
+
+#         # # rename images
+#         rename_images(working_dir)
+
+#         # # Export
+#         export(parsed_md)
+
+#     return
+
+
+def main(zip_file, deck_name):
+    
+
+    # Define the output folder
+    output_folder = "anki_converted"
+
+    # Create the output folder if it doesn't exist
+    os.makedirs(output_folder, exist_ok=True)
+
+    process_single_file(zip_file, deck_name)
 
 
 
-def main():
-    batch_mode()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Anki Deck Converter")
 
+    # Choose between single-file and batch-directory mode
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-s", "--single-file", help="Process a single ZIP file", metavar="ZIP_FILE")
+    # group.add_argument("-b", "--batch-directory", help="Process all ZIP files in a directory", metavar="DIRECTORY")
 
+    parser.add_argument("-d", "--deck-name", help="Specify the deck name", required=True)
 
-
-if __name__ == '__main__':
-    main()
+    args = parser.parse_args()
+    if args.single_file:
+        process_single_file(args.single_file, args.deck_name)
+    # elif args.batch_directory:
+    #     process_batch_directory(args.batch_directory)
+    main(args.single_file)
