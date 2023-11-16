@@ -4,6 +4,10 @@
 # For mass conversion of recalls to anki decks
 # With help from ate Ger and Rhean
 # github.com/gregorylearns
+#
+# TODO: REMOVE brackets, curly braces in DECK_TITLE # DONE - do tests
+#
+
 
 import os
 import subprocess
@@ -179,6 +183,15 @@ def split_text(text, line_delimiter='\n', item_delimiter='|'):
         result.append([item.strip() for item in items])
     return result
 
+def cleanup_deck_title(deck_title):
+    # Define a regular expression to match questionable characters
+    questionable_chars_pattern = r'[^\w\s.\-\[\]{}()]'
+    
+    # Remove questionable characters from the deck title
+    cleaned_title = re.sub(questionable_chars_pattern, '', deck_title)
+    
+    return(cleaned_title)
+
 
 def process_single_file(zip_file, deck_name):
     # Your processing logic here
@@ -193,6 +206,8 @@ def process_single_file(zip_file, deck_name):
 
     global DECK_TITLE
     DECK_TITLE = deck_name + "-" + os.path.splitext(base)[0]
+    DECK_TITLE = cleaned_title(DECK_TITLE)
+
 
     htmlfile = find_html_files_in_folder(f"{tmp_dir}")
 
