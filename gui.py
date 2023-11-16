@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 import os
 import subprocess
 import html2md2csv
+import webbrowser
 
 # Define the output folder
 output_folder = "output"
@@ -37,11 +38,11 @@ layout = [
     [sg.Text("(2) Enter Deck Name:"), sg.InputText(key="deck_name")],
     [sg.Button("(3) Run Script")],
     [sg.Text("(4) Move Images from tmp folder to <appdata>\\Anki2\\<user>\\collections.media")],
-    [sg.Button("Open images"), sg.Button("Open collections.media"), sg.Button("Exit")]
+    [sg.Button("Open images"), sg.Button("Open collections.media"), sg.Button("Check for Updates"), sg.Button("Exit")]
 ]
 
 # Create the window
-window = sg.Window("GDocs Table format to anki", layout, finalize=True)
+window = sg.Window("GDocs Table format to anki v0.0.1", layout, finalize=True)
 
 while True:
     event, values = window.read()
@@ -54,6 +55,12 @@ while True:
 
     elif event == "Open collections.media":
         open_explorer_collections_media()
+
+    elif event == "Check for Updates":
+        # Define the URL to the update page
+        update_url = "https://github.com/gregorylearns/gdocs-to-anki/releases/tag/releases"
+        # Open the URL in the default web browser
+        webbrowser.open(update_url)
 
     elif event == "(3) Run Script":
         file_path = values["file_path"]
