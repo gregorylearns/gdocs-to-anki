@@ -124,15 +124,6 @@ def generate_apkg(parsed_md_split , deck_name):
     # Get the current date in the format "yyyymmddhhmmss"
     current_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
-    # print("hi")
-
-
-    # Generate 5 random digits
-    # random_digits = ''.join(str(random.randint(0, 9)) for _ in range(5))
-
-    # Combine the date and random digits
-    # result = current_date + random_digits
-
     deck_id = int(current_date)
 
     deck = genanki.Deck(deck_id, deck_name)
@@ -185,10 +176,10 @@ def split_text(text, line_delimiter='\n', item_delimiter='|'):
 
 def cleanup_deck_title(deck_title):
     # Define a regular expression to match questionable characters
-    questionable_chars_pattern = r'[^\w\s.\-\[\]{}()]'
+    pattern = r'[\[\(\{<>"\'&%$#@!^*+=\]}\),\s]'
     
     # Remove questionable characters from the deck title
-    cleaned_title = re.sub(questionable_chars_pattern, '', deck_title)
+    cleaned_title = re.sub(pattern, '', deck_title)
     
     return(cleaned_title)
 
@@ -206,9 +197,9 @@ def process_single_file(zip_file, deck_name):
 
     global DECK_TITLE
     DECK_TITLE = deck_name + "-" + os.path.splitext(base)[0]
-    DECK_TITLE = cleaned_title(DECK_TITLE)
+    DECK_TITLE = cleanup_deck_title(DECK_TITLE)
 
-
+    print(f"Generating anki for {DECK_TITLE}")
     htmlfile = find_html_files_in_folder(f"{tmp_dir}")
 
     # title = input_file # <--- maybe add something
@@ -223,6 +214,11 @@ def process_single_file(zip_file, deck_name):
 
     text_for_anki_front_and_back = split_text(parsed_md)
     generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
+
+
+    #debug:
+    # print(text_for_anki_front_and_back)
+
 
     # # rename images
     rename_images(tmp_dir)
