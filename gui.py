@@ -42,7 +42,7 @@ layout = [
 ]
 
 # Create the window
-window = sg.Window("GDocs Table format to anki v0.0.1", layout, finalize=True)
+window = sg.Window("GDocs Table format to anki v0.0.2", layout, finalize=True)
 
 while True:
     event, values = window.read()
