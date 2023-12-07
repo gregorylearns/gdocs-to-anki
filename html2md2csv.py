@@ -19,8 +19,13 @@ import shutil
 import tempfile
 import datetime
 import random
-import genanki
+import platform
 from time import sleep
+
+
+import genanki
+
+
 
 # def extract_zip_to_tmp(zip_file_path):
 #     # Create a temporary directory in the same folder as the zip file
@@ -56,8 +61,24 @@ def html_to_md_stdout(htmlfile):
     # print(htmlfile)
     # current_dir = os.path.dirname(os.path.realpath(__file__))
 
+    current_os = platform.system()
+
+    if current_os == "Windows":
+        print("Running on Windows")
+        binaryfile = "html2md_win64.exe"
+        # Add Windows-specific code here
+        # For example: os.system("dir")
+    elif current_os == "Linux":
+        print("Running on Linux")
+        binaryfile = "html2md_linux64"
+        # Add Linux-specific code here
+        # For example: os.system("ls")
+    else:
+        print("Unsupported operating system")
+
+
     # Assuming html2md.exe is in the bin/ folder
-    html2md_path = os.path.join("bin", "html2md_win64.exe")
+    html2md_path = os.path.join("bin", binaryfile)
     
     command = [html2md_path, "-T", "-i", htmlfile]
     # print(command)
