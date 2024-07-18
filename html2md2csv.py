@@ -244,7 +244,7 @@ def process_single_file(zip_file, deck_name):
     # # rename images
     rename_images(tmp_dir)
     print(f"{tmp_dir}")
-    open_explorer_to_folders(tmp_dir)
+    # open_explorer_to_folders(tmp_dir)
 
     # # Export
     # export(parsed_md)
