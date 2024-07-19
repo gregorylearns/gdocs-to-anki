@@ -73,6 +73,11 @@ def html_to_md_stdout(htmlfile):
         binaryfile = "html2md_linux64"
         # Add Linux-specific code here
         # For example: os.system("ls")
+    elif current_os == "Darwin":
+        print("Running on MacOS")
+        binaryfile = "html2md_darwin_arm64"
+        # Add Linux-specific code here
+        # For example: os.system("ls")
     else:
         print("Unsupported operating system")
 
@@ -114,7 +119,7 @@ def parse_md(unparsed_md):
 
 def rename_images(directory):
     
-    folder = f"{directory}\\images"
+    folder = os.path.join(directory, 'images')
 
     if os.path.exists(folder) == False:
         print(f"No image in {folder}. Skipping..")
@@ -125,8 +130,10 @@ def rename_images(directory):
             print(f"{DECK_TITLE}-{filename} already exists! Skipping...")
             continue
         dst = f"{DECK_TITLE}-{filename}"
-        src = f"{folder}\\{filename}"  # foldername/filename, if .py file is outside folder
-        dst = f"{folder}\\{dst}"
+        # src = f"{folder}\\{filename}"  # foldername/filename, if .py file is outside folder
+        # dst = f"{folder}\\{dst}"
+        src = os.path.join(folder, filename)
+        dst = os.path.join(folder, dst)
         print(f"renaming {src} -> {dst}")
         os.rename(src, dst)
 
