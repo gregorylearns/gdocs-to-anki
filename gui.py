@@ -1,5 +1,6 @@
 import FreeSimpleGUI as sg
 import os
+import platform
 import subprocess
 import html2md2csv # own pkg
 import webbrowser
@@ -17,22 +18,64 @@ os.makedirs(output_folder, exist_ok=True)
 
 
 def open_explorer_collections_media():
-    # Folder in %appdata%/Anki2
-    folder2 = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
 
-    # Open Windows Explorer to the second folder
-    subprocess.Popen(f'explorer "{folder2}"')
+    current_os = platform.system()
+
+    if current_os == "Windows":
+        print("Running on Windows")
+        # Folder in %appdata%/Anki2
+        folder2 = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
+
+        # Open Windows Explorer to the second folder
+        subprocess.Popen(f'explorer "{folder2}"')
+        
+    elif current_os == "Linux":
+        print("Running on Linux")
+        binaryfile = "html2md_linux64"
+        # Add Linux-specific code here
+        # For example: os.system("ls")
+        
+    elif current_os == "Darwin":
+        print("Running on MacOS")
+        folder2 = os.path.expanduser('~/Library/Application Support/Anki2/')
+
+        # Open Finder to the second folder
+        subprocess.Popen(['open', folder2])
+
+
+    else:
+        print("Unsupported operating system")
+
 
 
 def open_explorer_script_dir():
     # Folder in the script's directory
-    # folder1 = os.path.join(images_directory)
+    current_os = platform.system()
  
     # Get the script's directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    if current_os == "Windows":
+        print("Running on Windows")
+        # Open Windows Explorer to the first folder
+        subprocess.Popen(f'explorer "{script_dir}')
 
-    # Open Windows Explorer to the first folder
-    subprocess.Popen(f'explorer "{script_dir}')
+    elif current_os == "Linux":
+        print("Running on Linux")
+        binaryfile = "html2md_linux64"
+        # Add Linux-specific code here
+        # For example: os.system("ls")
+        
+    elif current_os == "Darwin":
+        print("Running on MacOS")
+        joined_path = os.path.join(script_dir, 'output')
+        # Open Windows Explorer to the second folder
+        subprocess.Popen(['open', joined_path])
+
+
+    else:
+        print("Unsupported operating system")
+
+        
 
 # Define the GUI layout
 layout = [
@@ -87,7 +130,7 @@ while True:
         # Run your script here, for example:
         # subprocess.run(["pdfexperthighlights2anki.py", file_path, deck_name])
         # Simulate script completion by copying the file to the output folder
-        output_folder = "anki_converted"
+        # output_folder = "anki_converted"
         # output_path = os.path.join(output_folder, f"{deck_name}.apkg")
 
         try:
