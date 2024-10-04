@@ -31,15 +31,19 @@ def open_explorer_collections_media():
         
     elif current_os == "Linux":
         print("Running on Linux")
-        
+        # Folder in ~/.var/app/net.ankiweb.Anki/data/Anki2/
+        folder2 = os.path.expanduser('~/.var/app/net.ankiweb.Anki/data/Anki2/')
+
+        # Open Linux file explorer (xdg-open works for most distros)
+        subprocess.Popen(['xdg-open', folder2])
+
     elif current_os == "Darwin":
         print("Running on MacOS")
         folder2 = os.path.expanduser('~/Library/Application Support/Anki2/')
 
         # Open Finder to the second folder
         subprocess.Popen(['open', folder2])
-
-
+        
     else:
         print("Unsupported operating system")
 
