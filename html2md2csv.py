@@ -21,6 +21,7 @@ import datetime
 import random
 import platform
 from time import sleep
+from PIL import Image
 
 import genanki
 
@@ -102,6 +103,26 @@ def parse_md(unparsed_md):
             parsed_product += f"{formatted_fields[2]}|{formatted_fields[3]}<br><br>{formatted_fields[4]}\n"
 
     return (parsed_product)
+
+
+def optimize_image(image_path, target_width, quality=85):
+    """Optimize and resize the image if necessary."""
+    with Image.open(image_path) as img:
+        original_width, original_height = img.size
+
+        # Resize if image width is greater than target width
+        if original_width > target_width:
+            new_height = int((target_width / original_width) * original_height)
+            img = img.resize((target_width, new_height), Image.ANTIALIAS)
+
+        # Convert to JPEG format
+        if img.mode in ("RGBA", "LA"):
+            img = img.convert("RGB")
+        
+        # Save the optimized image
+        img.save(image_path, "jpeg", quality=quality)
+        print(f"Optimized and saved {image_path}")
+
 
 def rename_images(directory):
     
