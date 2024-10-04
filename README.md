@@ -2,7 +2,7 @@
 
 A desktop app that converts Google Docs tables (exported as `.zip`) into Anki decks (`.apkg`), making flashcard creation simple and fast.
 
-This has absolutely no warranty.
+HTML to markdown conversion is done by this [binary](https://github.com/JohannesKaufmann/html-to-markdown). This is the easiest conversion from html to md that i've found that works. Currently working on a python implementation of it. But as of now, this is what works.
 
 ## Features
 
