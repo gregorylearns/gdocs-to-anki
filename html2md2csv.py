@@ -21,21 +21,9 @@ import datetime
 import random
 import platform
 from time import sleep
-
+from PIL import Image
 
 import genanki
-
-
-
-# def extract_zip_to_tmp(zip_file_path):
-#     # Create a temporary directory in the same folder as the zip file
-#     zip_dir = os.path.dirname(zip_file_path)
-#     tmp_dir = tempfile.mkdtemp(dir=zip_dir)  # Create a temporary directory without automatic cleanup
-#     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-#         zip_ref.extractall(tmp_dir)
-#     # Return the path to the temporary directory
-#     return tmp_dir
-
 
 def extract_zip_to_output(zip_file_path, deck_name):
     # Create the output folder if it doesn't exist
@@ -50,59 +38,85 @@ def extract_zip_to_output(zip_file_path, deck_name):
     return output_folder
 
 
+def cleanup_directory(main_folder):
+    """
+    Cleans up the specified main folder by deleting the images/ folder
+    and the .html file within it.
 
-def cleanup_tmp_directory(tmp_dir):
-    # Clean up the temporary directory
-    shutil.rmtree(tmp_dir)
+    Parameters:
+        main_folder: The path to the main folder containing the images/ folder
+                     and the .html file.
+    """
+    # Path to the images folder
+    images_folder = os.path.join(main_folder, 'images')
+
+    # Delete the images folder if it exists
+    if os.path.exists(images_folder):
+        shutil.rmtree(images_folder)
+        print(f"Deleted directory: {images_folder}")
+    else:
+        print(f"No directory found to delete: {images_folder}")
+
+    # Find and delete the .html file
+    html_file_path = next((os.path.join(main_folder, f) for f in os.listdir(main_folder) if f.endswith('.html')), None)
+    
+    if html_file_path and os.path.isfile(html_file_path):
+        os.remove(html_file_path)
+        print(f"Deleted file: {html_file_path}")
+    else:
+        print("No .html file found to delete.")
 
 
 def html_to_md_stdout(htmlfile):
-    # uses the html2md.exe executable to convert the html to md
-    # print(htmlfile)
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
+    # Uses the html2md executable to convert the html to md
+    # I haven't figured out a proper implementation. So far using
+    # This binary gives the best and easiest result to parse.
+    """Converts HTML to Markdown using the appropriate html2md binary."""
+    
+    # Mapping platform names to binary files
+    binaries = {
+        "Windows": "html2md_win64.exe",
+        "Linux": "html2md_linux64",
+        "Darwin": "html2md_darwin_arm64"
+    }
 
+    # Get the current OS and corresponding binary
     current_os = platform.system()
-
-    if current_os == "Windows":
-        print("Running on Windows")
-        binaryfile = "html2md_win64.exe"
-        # Add Windows-specific code here
-        # For example: os.system("dir")
-    elif current_os == "Linux":
-        print("Running on Linux")
-        binaryfile = "html2md_linux64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
-    elif current_os == "Darwin":
-        print("Running on MacOS")
-        binaryfile = "html2md_darwin_arm64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
-    else:
-        print("Unsupported operating system")
-
-
-    # Assuming html2md.exe is in the bin/ folder
+    binaryfile = binaries.get(current_os)
+    
+    if not binaryfile:
+        sys.exit(f"Unsupported operating system: {current_os}")
+    
+    # Construct the path to the binary in the bin/ folder
     html2md_path = os.path.join("bin", binaryfile)
     
+    # Command to run the html2md conversion
     command = [html2md_path, "-T", "-i", htmlfile]
-    # print(command)
-    md_unparsed = subprocess.check_output(command)# , cwd=current_dir)
     
-    return(str(md_unparsed.decode("utf-8")))
+    try:
+        # Execute the command and capture the output
+        md_unparsed = subprocess.check_output(command)
+        return md_unparsed.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"Error running command: {e}")
+    except FileNotFoundError:
+        sys.exit(f"Binary not found: {html2md_path}")
+
+
 
 def replace_md_img_html_img(field,DECK_TITLE):
-    #image
-    pattern = r"!\[\]\(images\/(.*?)\)"
-    replacement = fr'<img src="{DECK_TITLE}-\1">'
+    # Replace the image and link reference in the .md file to html image tags
+    # image
+    pattern = r"!\[\]\(images\/(.*?)(\.\w+)\)"
+    replacement = fr'<img src="{DECK_TITLE}-\1.jpg">'  # Replace extension with .jpg
     newfield = re.sub(pattern, replacement, field)
 
-    #links
+    # links
     pattern_img = r"\[(.*?)\]\((.*?)\)"
     replacement_img = fr'<a href="\2">\1</a>'
     newfield_img = re.sub(pattern_img, replacement_img, newfield)
 
-    #return
+    # return
     return(newfield_img)
 
 def parse_md(unparsed_md):
@@ -117,6 +131,40 @@ def parse_md(unparsed_md):
 
     return (parsed_product)
 
+
+def optimize_image(image_path, target_width, quality=85):
+    """Optimize, resize the image if necessary, and save as .jpg. Deletes .png if input was a .png file."""
+    
+    # Get the filename and extension by splitting at the last dot
+    file_name = os.path.splitext(image_path)[0]
+    file_extension = os.path.splitext(image_path)[1]
+    
+    # Set the new image path with a .jpg extension
+    new_image_path = f"{file_name}.jpg"
+    
+    with Image.open(image_path) as img:
+        original_width, original_height = img.size
+
+        # Resize if image width is greater than target width
+        if original_width > target_width:
+            new_height = int((target_width / original_width) * original_height)
+            img = img.resize((target_width, new_height), Image.Resampling.LANCZOS)
+
+        # Convert to JPEG format if needed (handles transparency for PNGs)
+        if img.mode in ("RGBA", "LA"):
+            img = img.convert("RGB")
+
+        # Save the optimized image as .jpg
+        img.save(new_image_path, "JPEG", quality=quality)
+        print(f"Optimized and saved as {new_image_path}")
+
+    # If the original file was a .png, delete it
+    if file_extension.lower() == '.png':
+        os.remove(image_path)
+        print(f"Deleted original PNG file: {image_path}")
+
+
+
 def rename_images(directory):
     
     folder = os.path.join(directory, 'images')
@@ -130,12 +178,14 @@ def rename_images(directory):
             print(f"{DECK_TITLE}-{filename} already exists! Skipping...")
             continue
         dst = f"{DECK_TITLE}-{filename}"
-        # src = f"{folder}\\{filename}"  # foldername/filename, if .py file is outside folder
-        # dst = f"{folder}\\{dst}"
         src = os.path.join(folder, filename)
         dst = os.path.join(folder, dst)
         print(f"renaming {src} -> {dst}")
+
+        # Maybe add resize function here
+
         os.rename(src, dst)
+        optimize_image(dst, target_width=1920)
 
 
 
@@ -148,24 +198,49 @@ def export(parsed_lines):
 
 
 
-def generate_apkg(parsed_md_split , deck_name):
+def generate_apkg(parsed_md_split, deck_name):
+    """
+    Generates an Anki package (.apkg) from parsed markdown data.
+
+    Parameters:
+        parsed_md_split: List of lists containing card information.
+        deck_name: Name of the Anki deck to create.
+        output_folder: Directory where the .apkg file will be saved.
+    """
     # Get the current date in the format "yyyymmddhhmmss"
     current_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
     deck_id = int(current_date)
 
+    # Create the Anki deck
     deck = genanki.Deck(deck_id, deck_name)
-    #TODO: ADD CODE FOR GENANKI TO INCLUDE THE MEDIA FILES
+
+    # Add notes to the deck
     for card in parsed_md_split:
         if len(card) == 1:
             continue
         note = genanki.Note(model=genanki.BASIC_MODEL, fields=[card[0], card[1]])
         deck.add_note(note)
 
+    # Path to the images folder
+    images_folder = f'{output_folder}/images/'
+
+    # Get the list of image files from the images/ folder
+    media_files = [
+        os.path.join(images_folder, filename)
+        for filename in os.listdir(images_folder)
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
+    ]
+
+    # Create a package with the deck and the media files
+    package = genanki.Package(deck)
+    
+    # Attach the media files to the package
+    package.media_files = media_files
+
     # Save the deck to an Anki package (*.apkg) file
-    genanki.Package(deck).write_to_file(f'{output_folder}/{deck_name}.apkg')
-    print(f"File saved to {output_folder}/{deck_name}-without_media.apkg")
-    print("Please Move the images to anki media folder.")
+    save_location = f'{output_folder}/{deck_name}.apkg'
+    package.write_to_file(save_location)
+    print(f"File saved to {save_location}")
 
 def open_explorer_to_folders(tmp_dir):
     # Get the script's directory
@@ -240,17 +315,17 @@ def process_single_file(zip_file, deck_name):
     parsed_md = parse_md(unparsed_md)
     # print(parsed_md)
 
-    text_for_anki_front_and_back = split_text(parsed_md)
-    generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
-
-
-    #debug:
-    # print(text_for_anki_front_and_back)
-
-
-    # # rename images
+    # rename images
     rename_images(tmp_dir)
     print(f"{tmp_dir}")
+
+
+    # generate apkg with images
+    text_for_anki_front_and_back = split_text(parsed_md)
+    generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
+    cleanup_directory(output_folder)
+
+
     # open_explorer_to_folders(tmp_dir)
 
     # # Export
