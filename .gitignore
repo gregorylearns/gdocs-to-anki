@@ -6,3 +6,5 @@ test/
 releases/
 output/
 gdocs2ankitutorial/
+gui_builds/
+test_bs4.py
