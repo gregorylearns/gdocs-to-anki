@@ -38,7 +38,6 @@ def extract_zip_to_output(zip_file_path, deck_name):
     return output_folder
 
 
-
 def cleanup_tmp_directory(tmp_dir):
     # Clean up the temporary directory
     shutil.rmtree(tmp_dir)
@@ -48,40 +47,44 @@ def html_to_md_stdout(htmlfile):
     # Uses the html2md executable to convert the html to md
     # I haven't figured out a proper implementation. So far using
     # This binary gives the best and easiest result to parse.
+    """Converts HTML to Markdown using the appropriate html2md binary."""
+    
+    # Mapping platform names to binary files
+    binaries = {
+        "Windows": "html2md_win64.exe",
+        "Linux": "html2md_linux64",
+        "Darwin": "html2md_darwin_arm64"
+    }
 
+    # Get the current OS and corresponding binary
     current_os = platform.system()
-
-    if current_os == "Windows":
-        print("Running on Windows")
-        binaryfile = "html2md_win64.exe"
-        
-    elif current_os == "Linux":
-        print("Running on Linux")
-        binaryfile = "html2md_linux64"
-
-
-    elif current_os == "Darwin":
-        print("Running on MacOS")
-        binaryfile = "html2md_darwin_arm64"
-        
-    else:
-        print("Unsupported operating system")
-
-
-    # Assuming html2md.exe is in the bin/ folder
+    binaryfile = binaries.get(current_os)
+    
+    if not binaryfile:
+        sys.exit(f"Unsupported operating system: {current_os}")
+    
+    # Construct the path to the binary in the bin/ folder
     html2md_path = os.path.join("bin", binaryfile)
     
+    # Command to run the html2md conversion
     command = [html2md_path, "-T", "-i", htmlfile]
-    # print(command)
-    md_unparsed = subprocess.check_output(command)# , cwd=current_dir)
     
-    return(str(md_unparsed.decode("utf-8")))
+    try:
+        # Execute the command and capture the output
+        md_unparsed = subprocess.check_output(command)
+        return md_unparsed.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"Error running command: {e}")
+    except FileNotFoundError:
+        sys.exit(f"Binary not found: {html2md_path}")
+
+
 
 def replace_md_img_html_img(field,DECK_TITLE):
     # Replace the image and link reference in the .md file to html image tags
     # image
-    pattern = r"!\[\]\(images\/(.*?)\)"
-    replacement = fr'<img src="{DECK_TITLE}-\1">'
+    pattern = r"!\[\]\(images\/(.*?)(\.\w+)\)"
+    replacement = fr'<img src="{DECK_TITLE}-\1.jpg">'  # Replace extension with .jpg
     newfield = re.sub(pattern, replacement, field)
 
     # links
@@ -106,22 +109,36 @@ def parse_md(unparsed_md):
 
 
 def optimize_image(image_path, target_width, quality=85):
-    """Optimize and resize the image if necessary."""
+    """Optimize, resize the image if necessary, and save as .jpg. Deletes .png if input was a .png file."""
+    
+    # Get the filename and extension by splitting at the last dot
+    file_name = os.path.splitext(image_path)[0]
+    file_extension = os.path.splitext(image_path)[1]
+    
+    # Set the new image path with a .jpg extension
+    new_image_path = f"{file_name}.jpg"
+    
     with Image.open(image_path) as img:
         original_width, original_height = img.size
 
         # Resize if image width is greater than target width
         if original_width > target_width:
             new_height = int((target_width / original_width) * original_height)
-            img = img.resize((target_width, new_height), Image.ANTIALIAS)
+            img = img.resize((target_width, new_height), Image.Resampling.LANCZOS)
 
-        # Convert to JPEG format
+        # Convert to JPEG format if needed (handles transparency for PNGs)
         if img.mode in ("RGBA", "LA"):
             img = img.convert("RGB")
-        
-        # Save the optimized image
-        img.save(image_path, "jpeg", quality=quality)
-        print(f"Optimized and saved {image_path}")
+
+        # Save the optimized image as .jpg
+        img.save(new_image_path, "JPEG", quality=quality)
+        print(f"Optimized and saved as {new_image_path}")
+
+    # If the original file was a .png, delete it
+    if file_extension.lower() == '.png':
+        os.remove(image_path)
+        print(f"Deleted original PNG file: {image_path}")
+
 
 
 def rename_images(directory):
@@ -144,6 +161,7 @@ def rename_images(directory):
         # Maybe add resize function here
 
         os.rename(src, dst)
+        optimize_image(dst, target_width=1920)
 
 
 
