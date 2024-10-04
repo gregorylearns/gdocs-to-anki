@@ -31,9 +31,6 @@ def open_explorer_collections_media():
         
     elif current_os == "Linux":
         print("Running on Linux")
-        binaryfile = "html2md_linux64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
         
     elif current_os == "Darwin":
         print("Running on MacOS")
@@ -61,9 +58,6 @@ def open_explorer_script_dir():
 
     elif current_os == "Linux":
         print("Running on Linux")
-        binaryfile = "html2md_linux64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
         
     elif current_os == "Darwin":
         print("Running on MacOS")

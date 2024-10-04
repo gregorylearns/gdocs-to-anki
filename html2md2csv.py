@@ -22,20 +22,7 @@ import random
 import platform
 from time import sleep
 
-
 import genanki
-
-
-
-# def extract_zip_to_tmp(zip_file_path):
-#     # Create a temporary directory in the same folder as the zip file
-#     zip_dir = os.path.dirname(zip_file_path)
-#     tmp_dir = tempfile.mkdtemp(dir=zip_dir)  # Create a temporary directory without automatic cleanup
-#     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-#         zip_ref.extractall(tmp_dir)
-#     # Return the path to the temporary directory
-#     return tmp_dir
-
 
 def extract_zip_to_output(zip_file_path, deck_name):
     # Create the output folder if it doesn't exist
@@ -57,27 +44,25 @@ def cleanup_tmp_directory(tmp_dir):
 
 
 def html_to_md_stdout(htmlfile):
-    # uses the html2md.exe executable to convert the html to md
-    # print(htmlfile)
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
+    # Uses the html2md executable to convert the html to md
+    # I haven't figured out a proper implementation. So far using
+    # This binary gives the best and easiest result to parse.
 
     current_os = platform.system()
 
     if current_os == "Windows":
         print("Running on Windows")
         binaryfile = "html2md_win64.exe"
-        # Add Windows-specific code here
-        # For example: os.system("dir")
+        
     elif current_os == "Linux":
         print("Running on Linux")
         binaryfile = "html2md_linux64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
+
+
     elif current_os == "Darwin":
         print("Running on MacOS")
         binaryfile = "html2md_darwin_arm64"
-        # Add Linux-specific code here
-        # For example: os.system("ls")
+        
     else:
         print("Unsupported operating system")
 
@@ -92,17 +77,18 @@ def html_to_md_stdout(htmlfile):
     return(str(md_unparsed.decode("utf-8")))
 
 def replace_md_img_html_img(field,DECK_TITLE):
-    #image
+    # Replace the image and link reference in the .md file to html image tags
+    # image
     pattern = r"!\[\]\(images\/(.*?)\)"
     replacement = fr'<img src="{DECK_TITLE}-\1">'
     newfield = re.sub(pattern, replacement, field)
 
-    #links
+    # links
     pattern_img = r"\[(.*?)\]\((.*?)\)"
     replacement_img = fr'<a href="\2">\1</a>'
     newfield_img = re.sub(pattern_img, replacement_img, newfield)
 
-    #return
+    # return
     return(newfield_img)
 
 def parse_md(unparsed_md):
@@ -130,11 +116,12 @@ def rename_images(directory):
             print(f"{DECK_TITLE}-{filename} already exists! Skipping...")
             continue
         dst = f"{DECK_TITLE}-{filename}"
-        # src = f"{folder}\\{filename}"  # foldername/filename, if .py file is outside folder
-        # dst = f"{folder}\\{dst}"
         src = os.path.join(folder, filename)
         dst = os.path.join(folder, dst)
         print(f"renaming {src} -> {dst}")
+
+        # Maybe add resize function here
+
         os.rename(src, dst)
 
 
