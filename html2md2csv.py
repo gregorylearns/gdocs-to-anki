@@ -38,9 +38,33 @@ def extract_zip_to_output(zip_file_path, deck_name):
     return output_folder
 
 
-def cleanup_tmp_directory(tmp_dir):
-    # Clean up the temporary directory
-    shutil.rmtree(tmp_dir)
+def cleanup_directory(main_folder):
+    """
+    Cleans up the specified main folder by deleting the images/ folder
+    and the .html file within it.
+
+    Parameters:
+        main_folder: The path to the main folder containing the images/ folder
+                     and the .html file.
+    """
+    # Path to the images folder
+    images_folder = os.path.join(main_folder, 'images')
+
+    # Delete the images folder if it exists
+    if os.path.exists(images_folder):
+        shutil.rmtree(images_folder)
+        print(f"Deleted directory: {images_folder}")
+    else:
+        print(f"No directory found to delete: {images_folder}")
+
+    # Find and delete the .html file
+    html_file_path = next((os.path.join(main_folder, f) for f in os.listdir(main_folder) if f.endswith('.html')), None)
+    
+    if html_file_path and os.path.isfile(html_file_path):
+        os.remove(html_file_path)
+        print(f"Deleted file: {html_file_path}")
+    else:
+        print("No .html file found to delete.")
 
 
 def html_to_md_stdout(htmlfile):
@@ -174,24 +198,49 @@ def export(parsed_lines):
 
 
 
-def generate_apkg(parsed_md_split , deck_name):
+def generate_apkg(parsed_md_split, deck_name):
+    """
+    Generates an Anki package (.apkg) from parsed markdown data.
+
+    Parameters:
+        parsed_md_split: List of lists containing card information.
+        deck_name: Name of the Anki deck to create.
+        output_folder: Directory where the .apkg file will be saved.
+    """
     # Get the current date in the format "yyyymmddhhmmss"
     current_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
     deck_id = int(current_date)
 
+    # Create the Anki deck
     deck = genanki.Deck(deck_id, deck_name)
-    #TODO: ADD CODE FOR GENANKI TO INCLUDE THE MEDIA FILES
+
+    # Add notes to the deck
     for card in parsed_md_split:
         if len(card) == 1:
             continue
         note = genanki.Note(model=genanki.BASIC_MODEL, fields=[card[0], card[1]])
         deck.add_note(note)
 
+    # Path to the images folder
+    images_folder = f'{output_folder}/images/'
+
+    # Get the list of image files from the images/ folder
+    media_files = [
+        os.path.join(images_folder, filename)
+        for filename in os.listdir(images_folder)
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
+    ]
+
+    # Create a package with the deck and the media files
+    package = genanki.Package(deck)
+    
+    # Attach the media files to the package
+    package.media_files = media_files
+
     # Save the deck to an Anki package (*.apkg) file
-    genanki.Package(deck).write_to_file(f'{output_folder}/{deck_name}.apkg')
-    print(f"File saved to {output_folder}/{deck_name}-without_media.apkg")
-    print("Please Move the images to anki media folder.")
+    save_location = f'{output_folder}/{deck_name}.apkg'
+    package.write_to_file(save_location)
+    print(f"File saved to {save_location}")
 
 def open_explorer_to_folders(tmp_dir):
     # Get the script's directory
@@ -266,17 +315,17 @@ def process_single_file(zip_file, deck_name):
     parsed_md = parse_md(unparsed_md)
     # print(parsed_md)
 
-    text_for_anki_front_and_back = split_text(parsed_md)
-    generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
-
-
-    #debug:
-    # print(text_for_anki_front_and_back)
-
-
-    # # rename images
+    # rename images
     rename_images(tmp_dir)
     print(f"{tmp_dir}")
+
+
+    # generate apkg with images
+    text_for_anki_front_and_back = split_text(parsed_md)
+    generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
+    cleanup_directory(output_folder)
+
+
     # open_explorer_to_folders(tmp_dir)
 
     # # Export
