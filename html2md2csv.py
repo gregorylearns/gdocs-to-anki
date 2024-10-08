@@ -28,8 +28,15 @@ import genanki
 def extract_zip_to_output(zip_file_path, deck_name):
     # Create the output folder if it doesn't exist
     global output_folder
+
+    # make output folder
     output_folder = os.path.join("output", f"{deck_name}_output")
     os.makedirs(output_folder, exist_ok=True)
+
+    # make images folder
+    images_folder = os.path.join("output", f"{deck_name}_output", "images")
+    os.makedirs(images_folder, exist_ok=True)
+
 
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(output_folder)
@@ -125,7 +132,7 @@ def parse_md(unparsed_md):
     for line in unparsed_md.split("\n"):
         # split kay its separated by pipes
         fields = line.split("|")
-        if len(fields) >= 5:
+        if len(fields) >= 5: # | aaa | aaa | aaa | aaa |
             formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields]
             parsed_product += f"{formatted_fields[2]}|{formatted_fields[3]}<br><br>{formatted_fields[4]}\n"
 
@@ -151,7 +158,7 @@ def optimize_image(image_path, target_width, quality=85):
             img = img.resize((target_width, new_height), Image.Resampling.LANCZOS)
 
         # Convert to JPEG format if needed (handles transparency for PNGs)
-        if img.mode in ("RGBA", "LA"):
+        if img.mode != 'RGB':
             img = img.convert("RGB")
 
         # Save the optimized image as .jpg
