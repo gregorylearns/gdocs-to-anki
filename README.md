@@ -48,6 +48,12 @@ Download from the [releases](/releases/latest) page.
 2. Name your deck: Enter a deck name.
 3. Create deck: Click "Create .apkg" to generate your Anki deck.
 
+## Roadmap
+
+1. Remove reliance on the html2md binaries by working on own bs4 or other parsing
+2. Integrate to anki as an addon - AnkiHub
+
+
 ## Contribution
 We welcome contributions! Please create a pull request.
 
