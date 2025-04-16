@@ -1,7 +1,7 @@
 import platform
 import subprocess
 import webbrowser
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtGui
 from qt_material import apply_stylesheet
 from pathlib import Path
 
