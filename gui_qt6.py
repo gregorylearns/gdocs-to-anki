@@ -1,12 +1,13 @@
-import os
 import platform
 import subprocess
 import webbrowser
 from PyQt6 import QtWidgets, QtCore, QtGui
 from qt_material import apply_stylesheet
+from pathlib import Path
 
 import html2md2csv  # own package
 
+version = "0.2.0"
 
 class AnkiConverterApp(QtWidgets.QWidget):
     def __init__(self):
@@ -14,13 +15,13 @@ class AnkiConverterApp(QtWidgets.QWidget):
 
         # Initialize the output folder
         self.output_folder = "output"
-        os.makedirs(self.output_folder, exist_ok=True)
+        Path(self.output_folder).mkdir(parents=True, exist_ok=True)
 
         # Set up the UI
         self.setup_ui()
 
     def setup_ui(self):
-        self.setWindowTitle("GDocs Table format to Anki v0.1.0")
+        self.setWindowTitle(f"GDocs Table format to Anki v{version}")
         self.setGeometry(100, 100, 600, 180)
 
         # Layout
@@ -57,21 +58,22 @@ class AnkiConverterApp(QtWidgets.QWidget):
         self.run_button.clicked.connect(self.run_script)
         layout.addWidget(self.run_button, 4, 3)
 
-        self.open_images_button = QtWidgets.QPushButton("Open Images", self)
+        self.open_images_button = QtWidgets.QPushButton("Open Output Folder", self)
         self.open_images_button.clicked.connect(self.open_explorer_script_dir)
         layout.addWidget(self.open_images_button, 5, 0)
 
-        self.open_collections_button = QtWidgets.QPushButton("Open collections.media", self)
-        self.open_collections_button.clicked.connect(self.open_explorer_collections_media)
-        layout.addWidget(self.open_collections_button, 5, 1)
-
         self.check_updates_button = QtWidgets.QPushButton("Check for Updates", self)
         self.check_updates_button.clicked.connect(self.check_updates)
-        layout.addWidget(self.check_updates_button, 5, 2)
+        layout.addWidget(self.check_updates_button, 5, 1)
 
         self.help_button = QtWidgets.QPushButton("Help", self)
         self.help_button.clicked.connect(self.help_page)
-        layout.addWidget(self.help_button, 5, 3)
+        layout.addWidget(self.help_button, 5, 2)
+
+        # Exit button
+        self.exit_button = QtWidgets.QPushButton("Exit", self)
+        self.exit_button.clicked.connect(self.close)
+        layout.addWidget(self.exit_button, 5, 3)
 
         # credits
         self.credits = QtWidgets.QLabel("made with love for batch syncytium")
@@ -88,27 +90,27 @@ class AnkiConverterApp(QtWidgets.QWidget):
     def open_explorer_collections_media(self):
         current_os = platform.system()
         if current_os == "Windows":
-            folder = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
+            folder = Path('~\\AppData\\Roaming\\Anki2').expanduser()
             subprocess.Popen(f'explorer "{folder}"')
         elif current_os == "Linux":
-            folder = os.path.expanduser('~/.var/app/net.ankiweb.Anki/data/Anki2/')
-            subprocess.Popen(['xdg-open', folder])
+            folder = Path('~/.var/app/net.ankiweb.Anki/data/Anki2/').expanduser()
+            subprocess.Popen(['xdg-open', str(folder)])
         elif current_os == "Darwin":
-            folder = os.path.expanduser('~/Library/Application Support/Anki2/')
-            subprocess.Popen(['open', folder])
+            folder = Path('~/Library/Application Support/Anki2/').expanduser()
+            subprocess.Popen(['open', str(folder)])
         else:
             QtWidgets.QMessageBox.critical(self, "Error", "Unsupported operating system")
 
     def open_explorer_script_dir(self):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = Path(__file__).resolve().parent
         current_os = platform.system()
         if current_os == "Windows":
             subprocess.Popen(f'explorer "{script_dir}"')
         elif current_os == "Linux":
-            subprocess.Popen(['xdg-open', script_dir])
+            subprocess.Popen(['xdg-open', str(script_dir)])
         elif current_os == "Darwin":
-            joined_path = os.path.join(script_dir, 'output')
-            subprocess.Popen(['open', joined_path])
+            joined_path = script_dir / 'output'
+            subprocess.Popen(['open', str(joined_path)])
         else:
             QtWidgets.QMessageBox.critical(self, "Error", "Unsupported operating system")
 
@@ -129,7 +131,6 @@ class AnkiConverterApp(QtWidgets.QWidget):
             return
 
         try:
-            os.makedirs(self.output_folder, exist_ok=True)
             html2md2csv.main(file_path, deck_name)
             QtWidgets.QMessageBox.information(self, "Success", f"Script completed! Processed file saved in '{self.output_folder}' folder")
 
