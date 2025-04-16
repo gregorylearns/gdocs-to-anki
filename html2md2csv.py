@@ -9,19 +9,16 @@
 #
 
 
-import os
 import subprocess
 import re
 import sys
 import argparse
 import zipfile
 import shutil
-import tempfile
 import datetime
-import random
 import platform
-from time import sleep
 from PIL import Image
+from pathlib import Path
 
 import genanki
 
@@ -30,12 +27,12 @@ def extract_zip_to_output(zip_file_path, deck_name):
     global output_folder
 
     # make output folder
-    output_folder = os.path.join("output", f"{deck_name}_output")
-    os.makedirs(output_folder, exist_ok=True)
+    output_folder = Path("output") / f"{deck_name}_output"
+    output_folder.mkdir(parents=True, exist_ok=True)
 
     # make images folder
-    images_folder = os.path.join("output", f"{deck_name}_output", "images")
-    os.makedirs(images_folder, exist_ok=True)
+    images_folder = output_folder / "images"
+    images_folder.mkdir(parents=True, exist_ok=True)
 
 
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -55,20 +52,20 @@ def cleanup_directory(main_folder):
                      and the .html file.
     """
     # Path to the images folder
-    images_folder = os.path.join(main_folder, 'images')
+    images_folder = Path(main_folder) / 'images'
 
     # Delete the images folder if it exists
-    if os.path.exists(images_folder):
-        shutil.rmtree(images_folder)
+    if images_folder.exists():
+        shutil.rmtree(str(images_folder))
         print(f"Deleted directory: {images_folder}")
     else:
         print(f"No directory found to delete: {images_folder}")
 
     # Find and delete the .html file
-    html_file_path = next((os.path.join(main_folder, f) for f in os.listdir(main_folder) if f.endswith('.html')), None)
-    
-    if html_file_path and os.path.isfile(html_file_path):
-        os.remove(html_file_path)
+    html_file_path = next((f for f in Path(output_folder).iterdir() if f.name.endswith('.html')), None)
+
+    if html_file_path and html_file_path.is_file():
+        html_file_path.unlink()
         print(f"Deleted file: {html_file_path}")
     else:
         print("No .html file found to delete.")
@@ -95,7 +92,7 @@ def html_to_md_stdout(htmlfile):
         sys.exit(f"Unsupported operating system: {current_os}")
     
     # Construct the path to the binary in the bin/ folder
-    html2md_path = os.path.join("bin", binaryfile)
+    html2md_path = str(Path("bin") / binaryfile)
     
     # Command to run the html2md conversion
     command = [html2md_path, "-T", "-i", htmlfile]
@@ -115,7 +112,7 @@ def replace_md_img_html_img(field,DECK_TITLE):
     # Replace the image and link reference in the .md file to html image tags
     # image
     pattern = r"!\[\]\(images\/(.*?)(\.\w+)\)"
-    replacement = fr'<img src="{DECK_TITLE}-\1.jpg">'  # Replace extension with .jpg
+    replacement = fr'<img src="{DECK_TITLE}-\1.jpg">'  # Replace extension with .jpg re: optimize image fxn
     newfield = re.sub(pattern, replacement, field)
 
     # links
@@ -142,12 +139,13 @@ def parse_md(unparsed_md):
 def optimize_image(image_path, target_width, quality=85):
     """Optimize, resize the image if necessary, and save as .jpg. Deletes .png if input was a .png file."""
     
-    # Get the filename and extension by splitting at the last dot
-    file_name = os.path.splitext(image_path)[0]
-    file_extension = os.path.splitext(image_path)[1]
+    # Get the filename and extension
+    image_path_obj = Path(image_path)
+    file_name = str(image_path_obj.with_suffix(''))
+    file_extension = image_path_obj.suffix
     
     # Set the new image path with a .jpg extension
-    new_image_path = f"{file_name}.jpg"
+    new_image_path = str(Path(file_name).with_suffix('.jpg'))
     
     with Image.open(image_path) as img:
         original_width, original_height = img.size
@@ -167,32 +165,32 @@ def optimize_image(image_path, target_width, quality=85):
 
     # If the original file was a .png, delete it
     if file_extension.lower() == '.png':
-        os.remove(image_path)
+        Path(image_path).unlink()
         print(f"Deleted original PNG file: {image_path}")
 
 
 
 def rename_images(directory):
     
-    folder = os.path.join(directory, 'images')
+    folder = Path(directory) / 'images'
 
-    if os.path.exists(folder) == False:
+    if not folder.exists():
         print(f"No image in {folder}. Skipping..")
         return
 
-    for filename in os.listdir(folder):
-        if DECK_TITLE in filename:
-            print(f"{DECK_TITLE}-{filename} already exists! Skipping...")
+    for filename in folder.iterdir():
+        if DECK_TITLE in filename.name:
+            print(f"{DECK_TITLE}-{filename.name} already exists! Skipping...")
             continue
-        dst = f"{DECK_TITLE}-{filename}"
-        src = os.path.join(folder, filename)
-        dst = os.path.join(folder, dst)
+        dst = f"{DECK_TITLE}-{filename.name}"
+        src = folder / filename.name
+        dst = folder / dst
         print(f"renaming {src} -> {dst}")
 
         # Maybe add resize function here
 
-        os.rename(src, dst)
-        optimize_image(dst, target_width=1920)
+        src.rename(dst)
+        optimize_image(str(dst), target_width=1920)
 
 
 
@@ -233,9 +231,9 @@ def generate_apkg(parsed_md_split, deck_name):
 
     # Get the list of image files from the images/ folder
     media_files = [
-        os.path.join(images_folder, filename)
-        for filename in os.listdir(images_folder)
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
+        str(Path(images_folder) / filename.name)
+        for filename in Path(images_folder).iterdir()
+        if filename.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
     ]
 
     # Create a package with the deck and the media files
@@ -251,13 +249,13 @@ def generate_apkg(parsed_md_split, deck_name):
 
 def open_explorer_to_folders(tmp_dir):
     # Get the script's directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = Path(__file__).resolve().parent
 
     # Folder in the script's directory
     # folder1 = os.path.join(images_directory)
  
     # Folder in %appdata%/Anki2
-    folder2 = os.path.expanduser('~\\AppData\\Roaming\\Anki2')
+    folder2 = Path('~\\AppData\\Roaming\\Anki2').expanduser()
 
     # Open Windows Explorer to the first folder
     # subprocess.Popen(f'explorer "{script_dir}')
@@ -270,10 +268,10 @@ def open_explorer_to_folders(tmp_dir):
 
 def find_html_files_in_folder(folder_path):
     html_files = []
-    for root, dirs, files in os.walk(folder_path):
+    for root, dirs, files in Path(folder_path).walk():
         for file in files:
-            if file.endswith('.html'):
-                html_files.append(os.path.join(root, file))
+            if Path(file).name.endswith('.html'):
+                html_files.append(str(root / file))
     return html_files
 
 def split_text(text, line_delimiter='\n', item_delimiter='|'):
@@ -303,14 +301,14 @@ def process_single_file(zip_file, deck_name):
 
     # DECK_TITLE = zip_file.split(".zip")[0][:15]
 
-    base=os.path.basename(zip_file)
+    base=Path(zip_file).name
 
     global DECK_TITLE
-    DECK_TITLE = deck_name + "-" + os.path.splitext(base)[0]
+    DECK_TITLE = deck_name + "-" + Path(base).with_suffix('').name
     DECK_TITLE = cleanup_deck_title(DECK_TITLE)
 
     print(f"Generating anki for {DECK_TITLE}")
-    htmlfile = find_html_files_in_folder(f"{tmp_dir}")
+    htmlfile = find_html_files_in_folder(f"{output_folder}")
 
     # title = input_file # <--- maybe add something
     print(f"{htmlfile[0]}")
@@ -320,7 +318,6 @@ def process_single_file(zip_file, deck_name):
 
     # Parse the output
     parsed_md = parse_md(unparsed_md)
-    # print(parsed_md)
 
     # rename images
     rename_images(tmp_dir)
@@ -333,64 +330,6 @@ def process_single_file(zip_file, deck_name):
     cleanup_directory(output_folder)
 
 
-    # open_explorer_to_folders(tmp_dir)
-
-    # # Export
-    # export(parsed_md)
-
-    # cleanup_tmp_directory(tmp_dir)
-
-
-# def process_batch_directory(directory_path):
-#     # Your batch processing logic here
-#     print(f"Processing directory: {directory_path}")
-#     # parser = ArgumentParser()
-#     # parser.add_argument("-i", "--input-file", action="store")
-#     # parser.add_argument("-d", "--directory", action="store")
-#     # args = parser.parse_args()
-
-#     # #batch mode
-#     # select_folder = False
-#     # while select_folder == False:
-#     #     daddy_directory = input("Please input the directory: ")
-#     #     if os.path.isdir(daddy_directory) == True:
-#     #         select_folder = True
-
-#     daddy_directory = directory_path
-
-#     print("A")
-#     print("Run the code in the Following directories?")
-#     baby_directories = os.listdir(daddy_directory)
-#     for directory in baby_directories:
-#         print(directory)
-
-#     prompt1 = input("[Y]es/[N]o: ")
-#     if prompt1.lower() == "n":
-#         return
-
-#     for baby in baby_directories:
-#         working_dir = f"{daddy_directory}\\{baby}\\"
-#         html = [file for file in os.listdir(working_dir) if ".html" in file][0]
-    
-
-#         global DECK_TITLE
-#         DECK_TITLE = html.split(".html")[0]
-
-#         # title = input_file # <--- maybe add something
-#         unparsed_md = html_to_md_stdout(f"{working_dir}{html}") 
-
-#         # Parse the output
-#         parsed_md = parse_md(unparsed_md)
-#         # print(parsed_md)
-
-#         # # rename images
-#         rename_images(working_dir)
-
-#         # # Export
-#         export(parsed_md)
-
-#     return
-
 
 def main(zip_file, deck_name):
     
@@ -399,7 +338,7 @@ def main(zip_file, deck_name):
     output_folder = "output"
 
     # Create the output folder if it doesn't exist
-    os.makedirs(output_folder, exist_ok=True)
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
 
     process_single_file(zip_file, deck_name)
 
