@@ -117,7 +117,7 @@ def replace_md_img_html_img(field,DECK_TITLE):
 
     # links
     pattern_img = r"\[(.*?)\]\((.*?)\)"
-    replacement_img = fr'<a href="\2">\1</a>'
+    replacement_img = r'<a href="\2">\1</a>'
     newfield_img = re.sub(pattern_img, replacement_img, newfield)
 
     # return
