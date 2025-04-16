@@ -247,24 +247,6 @@ def generate_apkg(parsed_md_split, deck_name):
     package.write_to_file(save_location)
     print(f"File saved to {save_location}")
 
-def open_explorer_to_folders(tmp_dir):
-    # Get the script's directory
-    script_dir = Path(__file__).resolve().parent
-
-    # Folder in the script's directory
-    # folder1 = os.path.join(images_directory)
- 
-    # Folder in %appdata%/Anki2
-    folder2 = Path('~\\AppData\\Roaming\\Anki2').expanduser()
-
-    # Open Windows Explorer to the first folder
-    # subprocess.Popen(f'explorer "{script_dir}')
-    subprocess.Popen(f'explorer "{output_folder}')
-
-
-    # Open Windows Explorer to the anki appdata folder
-    subprocess.Popen(f'explorer "{folder2}"')
-
 
 def find_html_files_in_folder(folder_path):
     html_files = []
