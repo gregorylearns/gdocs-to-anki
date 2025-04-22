@@ -7,7 +7,7 @@ from pathlib import Path
 
 import html2md2csv  # own package
 
-version = "0.2.0"
+version = "0.2.1"
 
 class AnkiConverterApp(QtWidgets.QWidget):
     def __init__(self):
