@@ -59,7 +59,7 @@ class AnkiConverterApp(QtWidgets.QWidget):
         layout.addWidget(self.run_button, 4, 3)
 
         self.open_images_button = QtWidgets.QPushButton("Open Output Folder", self)
-        self.open_images_button.clicked.connect(self.open_explorer_script_dir)
+        self.open_images_button.clicked.connect(self.open_explorer_output_dir)
         layout.addWidget(self.open_images_button, 5, 0)
 
         self.check_updates_button = QtWidgets.QPushButton("Check for Updates", self)
@@ -88,29 +88,17 @@ class AnkiConverterApp(QtWidgets.QWidget):
             self.file_path_entry.setText(file_path)
             self.deck_name_entry.setText(html2md2csv.clean_filename(file_path)) # auto add the deck name
 
-    def open_explorer_collections_media(self):
-        current_os = platform.system()
-        if current_os == "Windows":
-            folder = Path('~\\AppData\\Roaming\\Anki2').expanduser()
-            subprocess.Popen(f'explorer "{folder}"')
-        elif current_os == "Linux":
-            folder = Path('~/.var/app/net.ankiweb.Anki/data/Anki2/').expanduser()
-            subprocess.Popen(['xdg-open', str(folder)])
-        elif current_os == "Darwin":
-            folder = Path('~/Library/Application Support/Anki2/').expanduser()
-            subprocess.Popen(['open', str(folder)])
-        else:
-            QtWidgets.QMessageBox.critical(self, "Error", "Unsupported operating system")
 
-    def open_explorer_script_dir(self):
-        script_dir = Path(__file__).resolve().parent
+    def open_explorer_output_dir(self):
+        output_dir = Path(__file__).resolve().parent / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
         current_os = platform.system()
         if current_os == "Windows":
-            subprocess.Popen(f'explorer "{script_dir}"')
+            subprocess.Popen(f'explorer "{output_dir}"')
         elif current_os == "Linux":
-            subprocess.Popen(['xdg-open', str(script_dir)])
+            subprocess.Popen(['xdg-open', str(output_dir)])
         elif current_os == "Darwin":
-            joined_path = script_dir / 'output'
+            joined_path = output_dir / 'output'
             subprocess.Popen(['open', str(joined_path)])
         else:
             QtWidgets.QMessageBox.critical(self, "Error", "Unsupported operating system")
