@@ -86,6 +86,7 @@ class AnkiConverterApp(QtWidgets.QWidget):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select Zip File", "", "Zip Files (*.zip)")
         if file_path:
             self.file_path_entry.setText(file_path)
+            self.deck_name_entry.setText(html2md2csv.clean_filename(file_path)) # auto add the deck name
 
     def open_explorer_collections_media(self):
         current_os = platform.system()
