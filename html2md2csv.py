@@ -6,7 +6,7 @@
 # github.com/gregorylearns
 #
 # TODO: REMOVE brackets, curly braces in DECK_TITLE # DONE - do tests
-#
+# TODO: change the printsigns into logging
 
 
 import subprocess
@@ -264,6 +264,14 @@ def split_text(text, line_delimiter='\n', item_delimiter='|'):
         result.append([item.strip() for item in items])
     return result
 
+def clean_filename(path): # TODO: merge the two functions above and below
+    p = Path(path)
+    # Get the stem (filename without extension)
+    name_without_ext = p.stem
+    # Remove special characters
+    cleaned_name = re.sub(r'[^A-Za-z0-9_\- ]+', '', name_without_ext)
+    return cleaned_name
+
 def cleanup_deck_title(deck_title):
     # Define a regular expression to match questionable characters
     pattern = r'[\[\(\{<>"\'&%$#@!^*+=\]}\),\s]'
@@ -286,8 +294,10 @@ def process_single_file(zip_file, deck_name):
     base=Path(zip_file).name
 
     global DECK_TITLE
-    DECK_TITLE = deck_name + "-" + Path(base).with_suffix('').name
-    DECK_TITLE = cleanup_deck_title(DECK_TITLE)
+    # DECK_TITLE = deck_name + "-" + Path(base).with_suffix('').name 
+    # DECK_TITLE = cleanup_deck_title(DECK_TITLE)
+    
+    DECK_TITLE = deck_name
 
     print(f"Generating anki for {DECK_TITLE}")
     htmlfile = find_html_files_in_folder(f"{output_folder}")
