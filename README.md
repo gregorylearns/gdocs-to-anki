@@ -1,4 +1,4 @@
-# GDocs to Anki Converter v0.2.0
+# GDocs to Anki Converter v0.2.1
 ![alt text](image.png)
 A desktop app that converts Google Docs tables (exported as `.zip`) into Anki decks (`.apkg`), making flashcard creation simple and fast.
 
