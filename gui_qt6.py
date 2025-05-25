@@ -7,6 +7,8 @@ from pathlib import Path
 
 import html2md2csv  # own package
 
+# TODO: ADD BINARY CHECK
+
 version = "0.2.1"
 
 class AnkiConverterApp(QtWidgets.QWidget):
@@ -90,7 +92,7 @@ class AnkiConverterApp(QtWidgets.QWidget):
 
 
     def open_explorer_output_dir(self):
-        output_dir = Path(__file__).resolve().parent / "output"
+        output_dir = Path("output")
         output_dir.mkdir(parents=True, exist_ok=True)
         current_os = platform.system()
         if current_os == "Windows":
@@ -120,6 +122,7 @@ class AnkiConverterApp(QtWidgets.QWidget):
             return
 
         try:
+            print("trying to convert. opening html2md2csv.main function")
             html2md2csv.main(file_path, deck_name)
             QtWidgets.QMessageBox.information(self, "Success", f"Script completed! Processed file saved in '{self.output_folder}' folder")
 
