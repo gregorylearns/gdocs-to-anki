@@ -332,6 +332,7 @@ def main(zip_file, deck_name):
     # Create the output folder if it doesn't exist
     Path(output_folder).mkdir(parents=True, exist_ok=True)
 
+    print("running process_single_file function")
     process_single_file(zip_file, deck_name)
 
 
