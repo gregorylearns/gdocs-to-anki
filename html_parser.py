@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 
 
 # TODO: Remove p and span tags? change to linebreaks?
+# <td> tag is data cell
 
 
 class TableParser(HTMLParser):
