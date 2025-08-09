@@ -76,7 +76,7 @@ def html_to_md_stdout(htmlfile):
     # I haven't figured out a proper implementation. So far using
     # This binary gives the best and easiest result to parse.
     """Converts HTML to Markdown using the appropriate html2md binary."""
-    
+
     # Mapping platform names to binary files
     binaries = {
         "Windows": "html2md_win64.exe",
@@ -87,16 +87,19 @@ def html_to_md_stdout(htmlfile):
     # Get the current OS and corresponding binary
     current_os = platform.system()
     binaryfile = binaries.get(current_os)
-    
+
     if not binaryfile:
         sys.exit(f"Unsupported operating system: {current_os}")
-    
+
     # Construct the path to the binary in the bin/ folder
     html2md_path = str(Path("bin") / binaryfile)
-    
+
+    if current_os == "Linux": # need to change this to detect streamlit deployment
+        html2md_path = "html2md"
+
     # Command to run the html2md conversion
     command = [html2md_path, "-T", "-i", htmlfile]
-    
+
     try:
         # Execute the command and capture the output
         md_unparsed = subprocess.check_output(command)
@@ -138,15 +141,15 @@ def parse_md(unparsed_md):
 
 def optimize_image(image_path, target_width, quality=85):
     """Optimize, resize the image if necessary, and save as .jpg. Deletes .png if input was a .png file."""
-    
+
     # Get the filename and extension
     image_path_obj = Path(image_path)
     file_name = str(image_path_obj.with_suffix(''))
     file_extension = image_path_obj.suffix
-    
+
     # Set the new image path with a .jpg extension
     new_image_path = str(Path(file_name).with_suffix('.jpg'))
-    
+
     with Image.open(image_path) as img:
         original_width, original_height = img.size
 
@@ -171,7 +174,7 @@ def optimize_image(image_path, target_width, quality=85):
 
 
 def rename_images(directory):
-    
+
     folder = Path(directory) / 'images'
 
     if not folder.exists():
@@ -198,7 +201,7 @@ def export(parsed_lines):
     # Export to
     filename = f"{DECK_TITLE}-without_media.txt"
     with open(filename, 'w', encoding="utf-8") as output_handle:
-        output_handle.write(parsed_lines)    
+        output_handle.write(parsed_lines)
     print(f"File saved to:{filename} successfully! Please Move the images to anki media folder, and import field. Dont forget to enable HTML in import options")
 
 
@@ -238,7 +241,7 @@ def generate_apkg(parsed_md_split, deck_name):
 
     # Create a package with the deck and the media files
     package = genanki.Package(deck)
-    
+
     # Attach the media files to the package
     package.media_files = media_files
 
@@ -275,10 +278,10 @@ def clean_filename(path): # TODO: merge the two functions above and below
 def cleanup_deck_title(deck_title):
     # Define a regular expression to match questionable characters
     pattern = r'[\[\(\{<>"\'&%$#@!^*+=\]}\),\s]'
-    
+
     # Remove questionable characters from the deck title
     cleaned_title = re.sub(pattern, '', deck_title)
-    
+
     return(cleaned_title)
 
 
@@ -294,9 +297,9 @@ def process_single_file(zip_file, deck_name):
     base=Path(zip_file).name
 
     global DECK_TITLE
-    # DECK_TITLE = deck_name + "-" + Path(base).with_suffix('').name 
+    # DECK_TITLE = deck_name + "-" + Path(base).with_suffix('').name
     # DECK_TITLE = cleanup_deck_title(DECK_TITLE)
-    
+
     DECK_TITLE = deck_name
 
     print(f"Generating anki for {DECK_TITLE}")
@@ -306,7 +309,7 @@ def process_single_file(zip_file, deck_name):
     print(f"{htmlfile[0]}")
 
 
-    unparsed_md = html_to_md_stdout(f"{htmlfile[0]}") 
+    unparsed_md = html_to_md_stdout(f"{htmlfile[0]}")
 
     # Parse the output
     parsed_md = parse_md(unparsed_md)
@@ -324,7 +327,7 @@ def process_single_file(zip_file, deck_name):
 
 
 def main(zip_file, deck_name):
-    
+
 
     # Define the output folder
     output_folder = "output"
