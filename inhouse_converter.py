@@ -5,8 +5,8 @@
 # with open(myfile, 'r') as handle:
 
 
-#     print(md(handle, default_title=True, 
-#     autolinks=False, 
+#     print(md(handle, default_title=True,
+#     autolinks=False,
 #     newline_style='BACKSLASH',
 #     escape_misc=True,
 #     keep_inline_images_in=['p','c0', 'c1']))
@@ -28,7 +28,7 @@ import re
 
 h = html2text.HTML2Text()
 h.images_as_html = True
-h.body_width = 0 
+h.body_width = 0
 h.unicode_snob = True
 h.wrap_tables = False
 h.bypass_tables = True
@@ -36,7 +36,8 @@ h.bypass_tables = True
 # h.google_doc = True
 # h.google_list_indent = 100
 
-myfile = "CopyofGENPATH_2NDBI_UnitExam8.html"
+# myfile = "CopyofGENPATH_2NDBI_UnitExam8.html"
+myfile = "test_for_html.html"
 with open(myfile, 'r') as myh:
     contents = myh.read()
     md = h.handle(contents)
@@ -60,7 +61,7 @@ with open(myfile, 'r') as myh:
     md = re.sub(r"\n\s\s8\. ","<br>H. ", md)
     md = re.sub(r"\n\s\s9\. ","<br>I. ", md)
     md = re.sub(r"\n\s\s10\. ","<br>J. ", md)
-    
+
     # need catch- all kay it bugs if unordered list -> *
     # for many test cases
     md = re.sub(r"\n\s\s\* ","<br>* ", md)
@@ -77,8 +78,10 @@ with open(myfile, 'r') as myh:
     md = re.sub(r"<br>\|","|", md)
     md = re.sub(r"</td></tr>","", md)
     md = re.sub(r"<tr>  <td>","|", md)
-    
-    # iterate na per line, 
+    md = re.sub(r"</tr>  </td>","|", md)
+
+
+    # iterate na per line,
     # split using "|", and take the last 2 of the split as the front/back
     # of the card
 
