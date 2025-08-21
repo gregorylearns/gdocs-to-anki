@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
 import re
+import argparse
 
 # myfile = "test_for_html.html"
 
 def html_to_markdown(cell):
     #HTML to kinda markdown
 
-    # Handle links
+     # Handle links
     for a in cell.find_all("a"):
         link_text = a.get_text(strip=True)
         href = a.get("href", "")
@@ -29,6 +30,11 @@ def html_to_markdown(cell):
             li.insert_before(f"{chr(64+i)}. ") # use chr() to list out unicode letters in order
             li.append("\n")
 
+    # Handle paragraphs
+    for p in cell.find_all("p"):
+        text = p.get_text()  # keep the \n
+        p.replace_with(text + "\n")
+
     # Finally, get the text with our replacements
     return cell.get_text()
 
@@ -36,6 +42,7 @@ def sub_text(md):
     # Substitute text
     substitutions = [
         (r"\n+", "<br>"),
+        (r"\n\xa0", ""),
     ]
     for pattern, replacement in substitutions:
         md = re.sub(pattern, replacement, md)
@@ -76,5 +83,15 @@ def html_to_md_bs4(htmlfile: str) -> str:
             row_data.append(markdown_text)
         if row_data:
             extracted_data.append(row_data)
-
+    print(extracted_data)
     return(output_unparsed_md(extracted_data))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="html to md")
+
+    parser.add_argument("-i", "--input", help="Process a HTML", metavar="HTML_FILE")
+    args = parser.parse_args()
+
+    out = html_to_md_bs4(args.input)
+    print(out)
