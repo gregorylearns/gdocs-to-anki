@@ -13,3 +13,4 @@ gui_qt6.spec
 dist/
 upx*/
 upx*
+.fuse_hidden*
