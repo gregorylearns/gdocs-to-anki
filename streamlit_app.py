@@ -29,7 +29,7 @@ Path(output_folder).mkdir(parents=True, exist_ok=True)
 
 # File selection
 uploaded_file = st.file_uploader(
-    "Select a zip file from GDocs (must be in a specific format. see Help):", type=["zip"]
+    "Select a zip file from GDocs (must be in a specific format. see Formatting Instructions below):", type=["zip"]
 )
 
 # Initialize session state
@@ -87,4 +87,19 @@ if st.button("Create .apkg"):
             st.error(f"An error occurred: {e}")
 
 
-st.markdown("made with love for batch syncytium")
+st.markdown("made with love for batch syncytium 💖")
+
+fmt_instructions_1 = '''
+---
+## Formatting Instructions:
+1. Google docs file must have 3 columns to work
+- First column is discarded. 2nd column is Front of the card and 3rd column is Back of the card
+'''
+
+
+
+st.markdown(fmt_instructions_1)
+st.image("assets/image1.png", caption="table must be formatted like this.")
+st.markdown("2. Download the Google doc as an Web Page(.html, zipped)")
+st.image("assets/image2.png", caption="File > Download > Web Page(.html, zipped)")
+
