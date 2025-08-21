@@ -103,3 +103,4 @@ st.image("assets/image1.png", caption="table must be formatted like this.")
 st.markdown("2. Download the Google doc as an Web Page(.html, zipped)")
 st.image("assets/image2.png", caption="File > Download > Web Page(.html, zipped)")
 
+st.markdown("![visitors](https://visitor-badge.laobi.icu/badge?page_id=gdocs2anki.visitor-badge)")
