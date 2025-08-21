@@ -78,6 +78,7 @@ if st.button("Create .apkg"):
                         icon=":material/download:",
                     )
                 st.success(f"Script completed!")
+                Path.unlink(file_path)
 
             else:
                 st.error("No .apkg file was generated.")
