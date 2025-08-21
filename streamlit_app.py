@@ -43,7 +43,7 @@ if uploaded_file is not None:
     st.session_state.deck_name = sanitized
 
 # Deck name input (bound to session_state)
-deck_name = st.text_input("Enter Deck Name:", key="deck_name")
+deck_name = st.text_input("Deck Name (auto set from filename):", key="deck_name", disabled=True)
 
 # Run script button
 if st.button("Create .apkg"):
