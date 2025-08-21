@@ -2,11 +2,26 @@ import streamlit as st
 import html2md2csv  # own package
 import platform
 import subprocess
+import re
+import os
 from pathlib import Path
 
 version = "0.2.1"
-
 st.title(f"GDocs Table format to Anki v{version}")
+
+
+
+def sanitize_filename(name: str) -> str:
+    # Remove extension if any
+    name = os.path.splitext(name)[0]
+    # Lowercase (optional, remove if you want original case)
+    name = name.lower()
+    # Replace spaces with underscores
+    name = name.replace(" ", "_")
+    # Keep only letters, numbers, underscores, and dashes
+    name = re.sub(r"[^a-zA-Z0-9_-]", "", name)
+    return name
+
 
 # Initialize the output folder
 output_folder = "output"
@@ -17,8 +32,18 @@ uploaded_file = st.file_uploader(
     "Select a zip file from GDocs (must be in a specific format. see Help):", type=["zip"]
 )
 
-# Deck name input
-deck_name = st.text_input("Enter Deck Name:")
+# Initialize session state
+if "deck_name" not in st.session_state:
+    st.session_state.deck_name = ""
+
+
+# Always overwrite deck_name when a file is uploaded
+if uploaded_file is not None:
+    sanitized = sanitize_filename(uploaded_file.name)
+    st.session_state.deck_name = sanitized
+
+# Deck name input (bound to session_state)
+deck_name = st.text_input("Enter Deck Name:", key="deck_name")
 
 # Run script button
 if st.button("Create .apkg"):
@@ -30,43 +55,35 @@ if st.button("Create .apkg"):
         try:
             print("trying to convert. opening html2md2csv.main function")
             # Save the uploaded file to a temporary location
-            with open("temp.zip", "wb") as f:
+            with open(f"{sanitized}.zip", "wb") as f:
                 f.write(uploaded_file.read())
-            file_path = "temp.zip"
+            file_path = f"{sanitized}.zip"
 
             html2md2csv.main(file_path, deck_name)
 
             generated_file = str(next(Path(f'output/{deck_name}_output').glob('*.apkg'), None))
             print(f"Generated file: {generated_file}")
-            with open(generated_file, "rb") as file:
 
-                st.download_button(
-                    label="Download text",
-                    data = file,
-                    file_name=f"{deck_name}.apkg",
-                    mime = "application/vnd.anki",
-                    on_click="ignore",
-                    type="primary",
-                    icon=":material/download:",
-                )
-            # st.success(f"Script completed! Processed file saved in '{output_folder}' folder")
+            if generated_file:
+                with open(generated_file, "rb") as file:
+                    file_bytes = file.read()
+
+                    st.download_button(
+                        label="Download .apkg",
+                        data = file_bytes,
+                        file_name=f"{deck_name}.apkg",
+                        mime = "application/octet-stream",
+                        on_click="ignore",
+                        type="primary",
+                        icon=":material/download:",
+                    )
+                st.success(f"Script completed!")
+
+            else:
+                st.error("No .apkg file was generated.")
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-
-if st.button("Open Output Folder"):
-    output_dir = Path("output")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    current_os = platform.system()
-    if current_os == "Windows":
-        subprocess.Popen(f'explorer "{output_dir}"')
-    elif current_os == "Linux":
-        subprocess.Popen(["xdg-open", str(output_dir)])
-    elif current_os == "Darwin":
-        joined_path = output_dir / "output"
-        subprocess.Popen(["open", str(joined_path)])
-    else:
-        st.error("Unsupported operating system")
 
 st.markdown("made with love for batch syncytium")
