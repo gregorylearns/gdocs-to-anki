@@ -33,7 +33,7 @@ h.unicode_snob = True
 h.wrap_tables = False
 h.bypass_tables = True
 # h.pad_tables = True
-# h.google_doc = True
+h.google_doc = True
 # h.google_list_indent = 100
 
 # myfile = "CopyofGENPATH_2NDBI_UnitExam8.html"
@@ -45,49 +45,59 @@ with open(myfile, 'r') as myh:
     #TODO: find way to retain the bold and italics flags
     #known bug, any text that occurs after the table gets included in the last card
 
-    # find a pythonic way to do the below!
-    # dont do it this way. make nalang an ordered list sa card settings to be letter
-    # ol {list-style-type: lower-alpha;}
-
-
     # Ordered lists to letters (didnt find a flag for it to auto)
-    md = re.sub(r"\n\s\s1\. ","<br>A. ", md)
-    md = re.sub(r"\n\s\s2\. ","<br>B. ", md)
-    md = re.sub(r"\n\s\s3\. ","<br>C. ", md)
-    md = re.sub(r"\n\s\s4\. ","<br>D. ", md)
-    md = re.sub(r"\n\s\s5\. ","<br>E. ", md)
-    md = re.sub(r"\n\s\s6\. ","<br>F. ", md)
-    md = re.sub(r"\n\s\s7\. ","<br>G. ", md)
-    md = re.sub(r"\n\s\s8\. ","<br>H. ", md)
-    md = re.sub(r"\n\s\s9\. ","<br>I. ", md)
-    md = re.sub(r"\n\s\s10\. ","<br>J. ", md)
+    def replace_numbers_with_letters(match):
+        number = int(match.group(1))
+        return chr(ord('A') + number - 1) + '. '
+
+    md = re.sub(r"^\s*(\d+)\.\s+", replace_numbers_with_letters, md, flags=re.MULTILINE)
 
     # need catch- all kay it bugs if unordered list -> *
     # for many test cases
-    md = re.sub(r"\n\s\s\* ","<br>* ", md)
+    # md = re.sub(r"\n\s\s\* ","<br>* ", md)
 
 
-    #turn each line into a row
-    md = re.sub(r"\n\s*\n","<br>", md)
-    md = re.sub(r"\n<td>","<td>", md)
-    md = re.sub(r"\n<br>","<br>", md)
+    # Define a list of regex substitutions
+    substitutions = [
+        (r"\n\s*\n", "<br>"),          # Replace multiple newlines with a single <br>
+        # (r"\n<td>", "<td>"),           # Clean up newlines before <td>
+        # (r"\n<br>", "<br>"),           # Clean up newlines before <br>
+        # # (r"<p[^>]*>", ""),             # Remove paragraph tags
+        # # (r"</p>", ""),                 # Remove closing paragraph tags
+        # (r"</td>  <td>", "|"),         # Consolidate table cells
+        # (r"\|<br>", "|"),              # Clean up pipe and <br>
+        # (r"<br>\|", "|"),              # Clean up <br> and pipe
+        # (r"</td></tr>", ""),           # Remove closing table data and row
+        # (r"<tr>  <td>", "|"),          # Consolidate table rows and data
+        # (r"</tr>  </td>", "|"),        # Clean up closing row and data
+        # (r"<table[^>]*>", ""),         # Remove table tag
+        # (r"</table>", ""),             # Remove closing table tag
+        # (r"</td>  <td>","|"),          # trim
+        # (r"\|<br>","|"),
+        # (r"<br></td>\n",""),
+        # (r"</td></tr>",""),
+        # (r"<tr>  <td>","|"),
+        # (r"</tr>  </td>","|"),
+        (r"<tr>\n",""),
+        # (r"<td>",""),
+        (r"<table[^>]*>", ""), # Remove table tag
+        (r"</table>", "")   # Remove closing table tag
+        ]
 
-    #trim
-    md = re.sub(r"</td>  <td>","|", md)
-    md = re.sub(r"\|<br>","|", md)
-    md = re.sub(r"<br>\|","|", md)
-    md = re.sub(r"</td></tr>","", md)
-    md = re.sub(r"<tr>  <td>","|", md)
-    md = re.sub(r"</tr>  </td>","|", md)
+    # Apply all substitutions in a loop
+    for pattern, replacement in substitutions:
+        md = re.sub(pattern, replacement, md)
+
+
+    print(md)
 
 
     # iterate na per line,
     # split using "|", and take the last 2 of the split as the front/back
     # of the card
 
-    print(type(md))
+
     splits = md.split("\n")
-    print(len(splits))
 
 
     # get the questions
@@ -95,10 +105,11 @@ with open(myfile, 'r') as myh:
         if "|" not in line:
             continue
         else:
-            splitting = line.split("|")
+            # Use list comprehension for stripping whitespace from parts
+            splitting = [part.strip() for part in line.split("|")]
             # print(splitting)
-            print(f"Front:{splitting[-2]}")
-            print(f"Back:{splitting[-1]}")
+            print(f"{splitting[-2]}")
+            print(f"{splitting[-1]}")
             print("-----")
 
 

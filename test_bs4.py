@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 
 
 
-myfile = "test\LMMJ1-1-Title-LQ [1-50]\LMMJ11TitleLQ150.html"
+myfile = "test_for_html.html"
 
 import html2text
 
@@ -10,7 +10,7 @@ import html2text
 def convert_lines_to_table(markdown_content):
     """Convert each line of the Markdown content into a row in a Markdown table."""
     lines = markdown_content.split('\n')
-    
+
     # Start the table with headers (customize these headers as needed)
     table = ['| Line Content |', '| --- |']
 
@@ -22,7 +22,7 @@ def convert_lines_to_table(markdown_content):
     return '\n'.join(table)
 
 
-    
+
 # Load the HTML file
 with open(myfile, 'r', encoding='utf-8') as file:
     html_content = file.read()
