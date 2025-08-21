@@ -6,7 +6,7 @@ import re
 import os
 from pathlib import Path
 
-version = "0.2.1"
+version = "0.3.0"
 st.title(f"GDocs Table format to Anki v{version}")
 
 
