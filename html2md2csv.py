@@ -8,7 +8,7 @@
 # TODO: REMOVE brackets, curly braces in DECK_TITLE # DONE - do tests
 # TODO: change the printsigns into logging
 
-
+# Standard library
 import subprocess
 import re
 import sys
@@ -20,7 +20,13 @@ import platform
 from PIL import Image
 from pathlib import Path
 
+# pypi library
 import genanki
+
+# own library
+import test_bs4_new
+
+
 
 def extract_zip_to_output(zip_file_path, deck_name):
     # Create the output folder if it doesn't exist
@@ -112,6 +118,13 @@ def html_to_md_stdout(htmlfile):
 
 
 def replace_md_img_html_img(field,DECK_TITLE):
+    # Replace HTML <img> tags with updated src attribute
+    # print("Hi")
+    html_pattern = r'<img\s+src=["\']images\/(.*?)(\.\w+)["\']\s*/?>'
+    html_replacement = fr'<img src="images\\{DECK_TITLE}-\1.jpg"/>'
+    field = re.sub(html_pattern, html_replacement, field)
+
+
     # Replace the image and link reference in the .md file to html image tags
     # image
     pattern = r"!\[\]\(images\/(.*?)(\.\w+)\)"
@@ -308,8 +321,12 @@ def process_single_file(zip_file, deck_name):
     # title = input_file # <--- maybe add something
     print(f"{htmlfile[0]}")
 
+    # old function
+    # unparsed_md = html_to_md_stdout(f"{htmlfile[0]}")
 
-    unparsed_md = html_to_md_stdout(f"{htmlfile[0]}")
+    # New function
+    unparsed_md = test_bs4_new.html_to_md_bs4(f"{htmlfile[0]}")
+
 
     # Parse the output
     parsed_md = parse_md(unparsed_md)
@@ -327,8 +344,6 @@ def process_single_file(zip_file, deck_name):
 
 
 def main(zip_file, deck_name):
-
-
     # Define the output folder
     output_folder = "output"
 
