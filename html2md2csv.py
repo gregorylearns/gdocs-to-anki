@@ -7,6 +7,7 @@
 #
 # TODO: REMOVE brackets, curly braces in DECK_TITLE # DONE - do tests
 # TODO: change the printsigns into logging
+# TODO: output folder gets created multiple times e.g. extract_zip_to_output and main
 
 # Standard library
 import subprocess
@@ -75,46 +76,6 @@ def cleanup_directory(main_folder):
         print(f"Deleted file: {html_file_path}")
     else:
         print("No .html file found to delete.")
-
-
-def html_to_md_stdout(htmlfile):
-    # Uses the html2md executable to convert the html to md
-    # I haven't figured out a proper implementation. So far using
-    # This binary gives the best and easiest result to parse.
-    """Converts HTML to Markdown using the appropriate html2md binary."""
-
-    # Mapping platform names to binary files
-    binaries = {
-        "Windows": "html2md_win64.exe",
-        "Linux": "html2md_linux64",
-        "Darwin": "html2md_darwin_arm64"
-    }
-
-    # Get the current OS and corresponding binary
-    current_os = platform.system()
-    binaryfile = binaries.get(current_os)
-
-    if not binaryfile:
-        sys.exit(f"Unsupported operating system: {current_os}")
-
-    # Construct the path to the binary in the bin/ folder
-    html2md_path = str(Path("bin") / binaryfile)
-
-    if current_os == "Linux": # need to change this to detect streamlit deployment
-        html2md_path = "html2md"
-
-    # Command to run the html2md conversion
-    command = [html2md_path, "-T", "-i", htmlfile]
-
-    try:
-        # Execute the command and capture the output
-        md_unparsed = subprocess.check_output(command)
-        return md_unparsed.decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        sys.exit(f"Error running command: {e}")
-    except FileNotFoundError:
-        sys.exit(f"Binary not found: {html2md_path}")
-
 
 
 def replace_md_img_html_img(field,DECK_TITLE):
@@ -265,6 +226,10 @@ def generate_apkg(parsed_md_split, deck_name):
 
 
 def find_html_files_in_folder(folder_path):
+    """
+    Google docs zip files usually are structured in a way that there is a html file
+    in the base directory and an images folder.
+    """
     html_files = []
     for root, dirs, files in Path(folder_path).walk():
         for file in files:
