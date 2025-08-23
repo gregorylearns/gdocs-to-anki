@@ -14,3 +14,4 @@ dist/
 upx*/
 upx*
 .fuse_hidden*
+.html
