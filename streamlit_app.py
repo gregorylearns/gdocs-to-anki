@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 
 version = "0.3.0"
-st.title(f"GDocs Table format to Anki v{version}")
-
+st.title(f":sparkling_heart: GDocs Table format to Anki")
+st.badge(f"{version}")
 
 
 def sanitize_filename(name: str) -> str:
@@ -93,7 +93,9 @@ fmt_instructions_1 = '''
 ---
 ## Formatting Instructions:
 1. Google docs file must have 3 columns to work
-- First column is discarded. 2nd column is Front of the card and 3rd column is Back of the card
+- 1st column is discarded. 
+- 2nd column is Front of the card and 
+- 3rd column is Back of the card
 '''
 
 
