@@ -15,4 +15,5 @@ upx*/
 upx*
 .fuse_hidden*
 .html
-.streamlit/
+.streamlit/secrets.toml
+.venv/
