@@ -12,8 +12,8 @@ from datetime import datetime
 
 version = "0.3.1"
 st.title(f":sparkling_heart: GDocs Table format to Anki")
-st.badge(f"{version}")
-ntfystring = "Run-Activity7-Announced-Only-String"
+st.badge(f"{version}") 
+
 # Logging code from here 
 # https://github.com/Sven-Bo/google-sheets-data-entry-form-with-streamlit/blob/main/streamlit_app.py
 
@@ -30,8 +30,8 @@ def optimize_anki_card(title: str, content: str):
         return
 
     content = str(content)
-    len_content = len(content) // 3 if len(content) > 1500 else 1500
-    requests.post(f"https://ntfy.sh/{ntfystring}",
+    len_content = len(content) // 3 if len(content) > 1000 else 1000
+    requests.post(f"https://ntfy.sh/{st.secrets["ntfystring"]}",
                 data=f"title:{title}\ncontent:{content[:len_content]}".encode(encoding='utf-8'))
 
 def sanitize_filename(name: str) -> str:
