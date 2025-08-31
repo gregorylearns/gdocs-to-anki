@@ -305,6 +305,7 @@ def process_single_file(zip_file, deck_name):
     text_for_anki_front_and_back = split_text(parsed_md)
     generate_apkg(text_for_anki_front_and_back, DECK_TITLE)
     cleanup_directory(output_folder)
+    return(text_for_anki_front_and_back)
 
 
 
@@ -316,8 +317,9 @@ def main(zip_file, deck_name):
     Path(output_folder).mkdir(parents=True, exist_ok=True)
 
     print("running process_single_file function")
-    process_single_file(zip_file, deck_name)
+    text = process_single_file(zip_file, deck_name)
 
+    return(text)
 
 
 if __name__ == "__main__":
