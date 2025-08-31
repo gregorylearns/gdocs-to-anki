@@ -4,12 +4,35 @@ import platform
 import subprocess
 import re
 import os
+import requests
+import pandas as pd
 from pathlib import Path
+from datetime import datetime
 
-version = "0.3.0"
+
+version = "0.3.1"
 st.title(f":sparkling_heart: GDocs Table format to Anki")
 st.badge(f"{version}")
+ntfystring = "Run-Activity7-Announced-Only-String"
+# Logging code from here 
+# https://github.com/Sven-Bo/google-sheets-data-entry-form-with-streamlit/blob/main/streamlit_app.py
 
+def optimize_anki_card(title: str, content: str):
+    """
+    Anki card data (date and time, title, content) to a ntfy.sh.
+
+    Args:
+        title (str): The title of the Anki card.
+        content (str): The content of the Anki card.
+    """
+    if not title or not content:
+        print("Error: Title and content cannot be empty.")
+        return
+
+    content = str(content)
+    len_content = len(content) // 3 if len(content) > 1500 else 1500
+    requests.post(f"https://ntfy.sh/{ntfystring}",
+                data=f"title:{title}\ncontent:{content[:len_content]}".encode(encoding='utf-8'))
 
 def sanitize_filename(name: str) -> str:
     # Remove extension if any
@@ -59,7 +82,7 @@ if st.button("Create .apkg"):
                 f.write(uploaded_file.read())
             file_path = f"{sanitized}.zip"
 
-            html2md2csv.main(file_path, deck_name)
+            log = html2md2csv.main(file_path, deck_name)
 
             generated_file = str(next(Path(f'output/{deck_name}_output').glob('*.apkg'), None))
             print(f"Generated file: {generated_file}")
@@ -80,6 +103,8 @@ if st.button("Create .apkg"):
                 st.success(f"Script completed!")
                 Path.unlink(file_path)
 
+                optimize_anki_card(sanitized,log)
+
             else:
                 st.error("No .apkg file was generated.")
 
@@ -90,6 +115,9 @@ if st.button("Create .apkg"):
 st.markdown("made with love for batch syncytium 💖")
 
 fmt_instructions_1 = '''
+---
+## Project Roadmap
+- retain google docs formatting: bold and italics (after hell week)
 ---
 ## Formatting Instructions:
 1. Google docs file must have 3 columns to work
