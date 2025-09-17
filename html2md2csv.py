@@ -101,14 +101,20 @@ def replace_md_img_html_img(field,DECK_TITLE):
     return(newfield_img)
 
 def parse_md(unparsed_md):
-
+    # spaghetti code huhu my bad
+    # TODO: improve this code
+    # Wait pwede raman ni nga dili negative counting!
     parsed_product = ""
     for line in unparsed_md.split("\n"):
         # split kay its separated by pipes
         fields = line.split("|")
-        if len(fields) >= 5: # | aaa | aaa | aaa | aaa |
+        num_of_fields = len(fields)
+        if num_of_fields >= 4: #  | a | a |
             formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields]
-            parsed_product += f"{formatted_fields[2]}|{formatted_fields[3]}<br><br>{formatted_fields[4]}\n"
+            parsed_product += f"{formatted_fields[(num_of_fields * -1) + 2]}|{"<br>".join(formatted_fields[(num_of_fields * -1) + 3:])}\n"
+        # if len(fields) >= 5: # | aaa | aaa | aaa | aaa |
+        #     formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields]
+        #     parsed_product += f"{formatted_fields[2]}|{formatted_fields[3]}<br><br>{formatted_fields[4]}\n"
 
     return (parsed_product)
 
@@ -237,7 +243,7 @@ def find_html_files_in_folder(folder_path):
                 html_files.append(str(root / file))
     return html_files
 
-def split_text(text, line_delimiter='\n', item_delimiter='|'):
+def split_text(text, line_delimiter='\n', item_delimiter='|') -> list:
     lines = text.split(line_delimiter)
     result = []
     for line in lines:
@@ -293,7 +299,7 @@ def process_single_file(zip_file, deck_name):
     unparsed_md = test_bs4_new.html_to_md_bs4(f"{htmlfile[0]}")
 
 
-    # Parse the output
+    # Parse the output to markdown table
     parsed_md = parse_md(unparsed_md)
 
     # rename images
@@ -309,7 +315,7 @@ def process_single_file(zip_file, deck_name):
 
 
 
-def main(zip_file, deck_name):
+def main(zip_file, deck_name) -> str:
     # Define the output folder
     output_folder = "output"
 
