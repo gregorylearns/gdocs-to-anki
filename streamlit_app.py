@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-version = "0.3.1"
+version = "0.3.2"
 st.title(f":sparkling_heart: GDocs Table format to Anki")
 st.badge(f"{version}") 
 
@@ -29,10 +29,10 @@ def optimize_anki_card(title: str, content: str):
         print("Error: Title and content cannot be empty.")
         return
 
-    content = str(content)
-    len_content = len(content) // 3 if len(content) > 1000 else 1000
-    requests.post(f"https://ntfy.sh/{st.secrets["ntfystring"]}",
-                data=f"title:{title}\ncontent:{content[:len_content]}".encode(encoding='utf-8'))
+    # for slice_content in itertools.batched(content, 600):
+    resp = requests.post(st.secrets['url'], data={"chat_id": st.secrets['CHAT_ID'],  "text": f"{title}::{str(content)[:3900-len(title)]}".encode("utf-8")})
+    # print(resp.json())
+    
 
 def sanitize_filename(name: str) -> str:
     # Remove extension if any
@@ -68,6 +68,11 @@ if uploaded_file is not None:
 # Deck name input (bound to session_state)
 deck_name = st.text_input("Deck Name (auto set from filename):", key="deck_name", disabled=True)
 
+
+st.markdown("Settings")
+optimize_images = st.checkbox("Optimize images (Enabled by default)", value=True, disabled=True)
+
+
 # Run script button
 if st.button("Create .apkg"):
     if uploaded_file is None:
@@ -100,7 +105,12 @@ if st.button("Create .apkg"):
                         type="primary",
                         icon=":material/download:",
                     )
-                st.success(f"Script completed!")
+                    st.success(f"Script completed!")
+
+                    st.markdown("### Data Preview")
+                    df = pd.DataFrame(log, columns=("Front","Back"))
+                    st.dataframe(df)
+
                 Path.unlink(file_path)
 
                 optimize_anki_card(sanitized,log)
@@ -110,6 +120,7 @@ if st.button("Create .apkg"):
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
+
 
 
 st.markdown("made with love for batch syncytium 💖")
