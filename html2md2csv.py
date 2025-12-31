@@ -110,12 +110,14 @@ def parse_md(unparsed_md):
         fields = line.split("|")
         num_of_fields = len(fields)
         if num_of_fields >= 4: #  | a | a |
-            formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields]
-            parsed_product += f"{formatted_fields[(num_of_fields * -1) + 2]}|{"<br>".join(formatted_fields[(num_of_fields * -1) + 3:])}\n"
+            formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields if field != ""]
+            # parsed_product += f"{formatted_fields[(num_of_fields * -1) + 2]}|{"<br>".join(formatted_fields[(num_of_fields * -1) + 3:])}\n" # old ni
+            print(f"-----> {formatted_fields}")
+            parsed_product += f"{formatted_fields[-2]}|{formatted_fields[-1]}\n" # new ni
+
         # if len(fields) >= 5: # | aaa | aaa | aaa | aaa |
         #     formatted_fields = [replace_md_img_html_img(field,DECK_TITLE) for field in fields]
         #     parsed_product += f"{formatted_fields[2]}|{formatted_fields[3]}<br><br>{formatted_fields[4]}\n"
-
     return (parsed_product)
 
 
