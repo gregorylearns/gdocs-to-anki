@@ -7,7 +7,7 @@ import argparse
 def html_to_markdown(cell):
     #HTML to kinda markdown
 
-     # Handle links
+    # Handle links
     for a in cell.find_all("a"):
         link_text = a.get_text(strip=True)
         href = a.get("href", "")
@@ -34,6 +34,10 @@ def html_to_markdown(cell):
     for p in cell.find_all("p"):
         text = p.get_text()  # keep the \n
         p.replace_with(text + "\n")
+
+
+    # Handle italics/bold/underline
+    # TODO
 
     # Finally, get the text with our replacements
     return cell.get_text()
