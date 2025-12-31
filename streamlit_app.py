@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-version = "0.3.2"
+version = "0.3.3"
 st.title(f":sparkling_heart: GDocs Table format to Anki")
 st.badge(f"{version}") 
 
@@ -128,13 +128,16 @@ st.markdown("made with love for batch syncytium 💖")
 fmt_instructions_1 = '''
 ---
 ## Project Roadmap
+- ✅ works with only 2 columns (no need 3 columns)
+
+### Coming soon
 - retain google docs formatting: bold and italics (after hell week)
 ---
 ## Formatting Instructions:
-1. Google docs file must have 3 columns to work
-- 1st column is discarded. 
-- 2nd column is Front of the card and 
-- 3rd column is Back of the card
+1. Google docs file must have at least 2 columns to work
+- Only the last 2 columns are retained
+- 2nd to the last column are mapped to the Front of the card
+- Last column are mapped to Back of the card
 '''
 
 
