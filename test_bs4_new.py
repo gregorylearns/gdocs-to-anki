@@ -96,14 +96,40 @@ def html_to_markdown(cell, style_map, soup):
     for img in cell.find_all("img"):
         src = img.get("src", "")
         alt = img.get("alt", "")
-        img.replace_with(f"![{alt}]({src})")
+
+        # Create a clean replacement (Markdown or simple HTML)
+        # If you want Markdown:
+        replacement = f"![{alt}]({src})"
+        # If you want clean HTML:
+        # replacement = soup.new_tag("img", src=src, alt=alt)
+        
+        # Check if the image is wrapped in a span (Google Docs style)
+        parent = img.parent
+        if parent and parent.name == "span":
+            # Replace the entire span with the clean image
+            parent.replace_with(replacement)
+        else:
+            # Otherwise just replace the image itself
+            img.replace_with(replacement)
         
     
-    # 4. Handle ordered lists
+    # # 4. Handle ordered lists
     # for ol in cell.find_all("ol"):
     #     for i, li in enumerate(ol.find_all("li"), start=1):
     #         li.insert_before(f"{chr(64+i)}. ") # use chr() to list out unicode letters in order e.g. ABCDE
     #         li.append("\n")
+
+    # 4. Handle ordered lists (CLEAN VERSION)
+    for ol in cell.find_all("ol"):
+        for i, li in enumerate(ol.find_all("li"), start=1):
+            # Insert your custom numbering
+            li.insert_before(f"{chr(64+i)}. ") 
+            li.append("<br>") # Use <br> for linebreaks in the list
+            # Unwrap the <li> tag
+            li.unwrap()
+        # Unwrap the <ol> tag
+        ol.unwrap()
+
 
     # Handle paragraphs with 
     # for p in cell.find_all("p"):
@@ -160,7 +186,7 @@ def html_to_markdown(cell, style_map, soup):
         # 4. Colors (Preserve as inline style on the span itself)
         inline_styles = []
         if "color" in combined_styles:
-            inline_styles.append(f"color: {combined_styles['color']}")
+            inline_styles.append(f"color: #{combined_styles['color']}")
         if "background-color" in combined_styles:
             inline_styles.append(f"background-color: {combined_styles['background-color']}")
         
