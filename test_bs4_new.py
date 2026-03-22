@@ -5,14 +5,6 @@ import tinycss2
 import pprint
 
 
-# TODO
-"""
-im using python bs4 help me parse the style text/css as i will reapply it in my own implementation to a simpler html type later 
-
-Would you like me to write a function that automatically replaces these classes with semantic tags like <strong> and <em>?
-
-
-"""
 def parse_gdoc_styles(soup, retain_properties=None):
     """
     Builds a map of class names to style dicts, 
@@ -72,8 +64,8 @@ def html_to_markdown(cell, style_map, soup):
     - Preserves colors via inline styles.
     - Returns ONLY the inner content (removes outer <td> tags).
     """
-    print(f"---->")
-    print(f"> cell before: {cell}")
+    # print(f"---->")
+    # print(f"> cell before: {cell}")
  
     # 1. Remove <p> tags but keep their content
     for p in cell.find_all("p"):
@@ -111,13 +103,6 @@ def html_to_markdown(cell, style_map, soup):
         else:
             # Otherwise just replace the image itself
             img.replace_with(replacement)
-        
-    
-    # # 4. Handle ordered lists
-    # for ol in cell.find_all("ol"):
-    #     for i, li in enumerate(ol.find_all("li"), start=1):
-    #         li.insert_before(f"{chr(64+i)}. ") # use chr() to list out unicode letters in order e.g. ABCDE
-    #         li.append("\n")
 
     # 4. Handle ordered lists (CLEAN VERSION)
     for ol in cell.find_all("ol"):
@@ -129,19 +114,6 @@ def html_to_markdown(cell, style_map, soup):
             li.unwrap()
         # Unwrap the <ol> tag
         ol.unwrap()
-
-
-    # Handle paragraphs with 
-    # for p in cell.find_all("p"):
-    #     text = p.get_text()  # keep the \n
-    #     p.replace_with(text + "\n")
-
-
-    # Handle italics/bold/underline
-    # TODO
-
-    # Finally, get the text with our replacements
-    # return cell.get_text()
 
     # Handle formatting by looking up classes in the style_map
     for span in cell.find_all("span", class_=True):
@@ -165,7 +137,7 @@ def html_to_markdown(cell, style_map, soup):
         # Remove color:000000 in combined styles
         if combined_styles.get("color") == "000000":
             combined_styles.pop("color", None)
-        print(f">>>combined_styles: {combined_styles}")
+        # print(f">>>combined_styles: {combined_styles}")
 
         
         
@@ -213,16 +185,13 @@ def html_to_markdown(cell, style_map, soup):
     if output.endswith("<br>"):
         output = output[:-4]
     
-    print(f"> cell contents: {cell.contents}")
-    print(f"> cell after: {cell}")
-    print(f"> classes: {classes}")
-    print(f"> style map: {style_map}")
-    print(f"> combined styles after: {combined_styles}")
-    print(f"> output: {output}")
-
-
+    # print(f"> cell contents: {cell.contents}")
+    # print(f"> cell after: {cell}")
+    # print(f"> classes: {classes}")
+    # print(f"> style map: {style_map}")
+    # print(f"> combined styles after: {combined_styles}")
+    # print(f"> output: {output}")
     return(output)
-    # or a markdown converter that understands these tags.
 
 
 
