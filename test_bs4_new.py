@@ -181,7 +181,7 @@ def html_to_markdown(cell, style_map, soup):
             
         # 3. Bold
         if combined_styles.get("font-weight") in ["700.0", "bold"]:
-            span.wrap(soup.new_tag("strong"))
+            span.wrap(soup.new_tag("b"))
 
         # 4. Colors (Preserve as inline style on the span itself)
         inline_styles = []
