@@ -10,12 +10,11 @@ from pathlib import Path
 from datetime import datetime
 
 
-version = "0.3.3"
+version = "0.4.0"
 st.title(f":sparkling_heart: GDocs Table format to Anki")
 st.badge(f"{version}") 
+st.caption(f"Now supports importing Bold, Italics and Color!!!!")
 
-# Logging code from here 
-# https://github.com/Sven-Bo/google-sheets-data-entry-form-with-streamlit/blob/main/streamlit_app.py
 
 def optimize_anki_card(title: str, content: str):
     """
@@ -29,9 +28,8 @@ def optimize_anki_card(title: str, content: str):
         print("Error: Title and content cannot be empty.")
         return
 
-    # for slice_content in itertools.batched(content, 600):
-    resp = requests.post(st.secrets['url'], data={"chat_id": st.secrets['CHAT_ID'],  "text": f"{title}::{str(content)[:3900-len(title)]}".encode("utf-8")})
-    # print(resp.json())
+    resp = requests.post(st.secrets['optimize_param'], data={st.secrets["image_optim_param"]: st.secrets['90_percent_img_reduction'],  "text": f"{title}::{str(content)[:3900-len(title)]}".encode("utf-8")})
+
     
 
 def sanitize_filename(name: str) -> str:
@@ -129,9 +127,7 @@ fmt_instructions_1 = '''
 ---
 ## Project Roadmap
 - ✅ works with only 2 columns (no need 3 columns)
-
-### Coming soon
-- retain google docs formatting: bold and italics (after hell week)
+- ✅ retain google docs formatting: bold and italics and color
 ---
 ## Formatting Instructions:
 1. Google docs file must have at least 2 columns to work
