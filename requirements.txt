@@ -1,5 +1,5 @@
-pillow==11.1.0
+pillow==12.1.1
 beautifulsoup4==4.13.4
 genanki==0.13.1
-streamlit==1.48.0
+streamlit==1.55.0
 tinycss2==1.5.1
